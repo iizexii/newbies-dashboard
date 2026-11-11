@@ -2,17 +2,17 @@
 import { generateDemo } from './data.js';
 import { addDays, diffDays } from './dates.js';
 
-const KEY = 'novichok.state.v5';
+const KEY = 'novichok.state.v6';
 
 export function loadState(today) {
   let state = null;
   try {
     // старые версии демо больше не нужны
-    for (const v of [1, 2, 3, 4]) localStorage.removeItem(`novichok.state.v${v}`);
+    for (const v of [1, 2, 3, 4, 5]) localStorage.removeItem(`novichok.state.v${v}`);
     const raw = localStorage.getItem(KEY);
     if (raw) state = JSON.parse(raw);
   } catch { /* приватный режим или битые данные - начнём с демо */ }
-  if (!state || state.version !== 5) state = generateDemo(today);
+  if (!state || state.version !== 6) state = generateDemo(today);
   return keepDemoFresh(state, today);
 }
 

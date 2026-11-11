@@ -3,8 +3,8 @@
 // дублируются в Битрикс24 через im.notify.
 import { ctx, emp, manager, managerName, personName, newcomers, assess } from './ctx.js';
 import { isNewTask, hasUnseenChanges, isRework, lastChange, TASK_FIELDS } from './tasks.js';
-import { PULSE_QUESTIONS } from './risk.js';
-import { addDays, workdaysBetween } from './dates.js';
+import { PULSE_QUESTIONS, PULSE_REMIND_AFTER } from './risk.js';
+import { addDays, workdaysBetween, fmt } from './dates.js';
 
 /** Сколько рабочих дней поручение просрочено (сегодня не считаем). */
 export function overdueWorkdays(x, today) {
@@ -19,6 +19,12 @@ const lowPulse = (e) => {
   if (!p) return null;
   const low = PULSE_QUESTIONS.filter((q) => p.answer[q.key] <= 2);
   return low.length ? { p, low } : null;
+};
+
+/** Опрос без ответа PULSE_REMIND_AFTER и более рабочих дней: повод руководителю напомнить. */
+export const pulseNoAnswer = (e) => {
+  const d = assess(e).metrics.pulseDue;
+  return d && d.waited >= PULSE_REMIND_AFTER ? d : null;
 };
 
 /** Уведомления текущей роли. unread - показывать счётчик; sticky - уходит только когда проблема решена. */
@@ -52,6 +58,8 @@ export function notifications() {
     for (const e of newcomers().filter((n) => n.managerId === mg.id)) {
       const lp = lowPulse(e);
       if (lp && !lp.p.answer.mgrSeen) out.push({ kind: 'pulse', title: 'Низкая оценка в опросе', text: `${e.name}: "${lp.low[0].label}" - ${lp.p.answer[lp.low[0].key]} из 5`, date: lp.p.answer.date, act: 'notif-pulse', id: e.id, k: lp.p.key });
+      const wait = pulseNoAnswer(e);
+      if (wait) out.push({ kind: 'pulse', title: 'Новичок не ответил на опрос', text: `${e.name}: опрос ${wait.day}-го дня ждёт ответа ${wait.waited} раб. дн., доступен до ${fmt(wait.closesOn)}. Напомните при встрече.`, date: today, act: 'open', id: e.id, sticky: true });
     }
   } else {
     for (const x of state.actions) {

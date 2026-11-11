@@ -296,3 +296,19 @@ test('демо как у заказчика: ~400 работающих, ранн
   const d = buildAnalytics(s, today, s.departments[0].id);
   assert.ok(d.leavers <= A.leavers && d.earlyLeavers <= A.earlyLeavers);
 });
+
+test('опрос без ответа: считаем рабочие дни ожидания, с 3-го дня - напоминание руководителю', async () => {
+  const { PULSE_REMIND_AFTER } = await import('../src/risk.js');
+  // вышел 02.11: опрос 7-го дня открылся 09.11, ждёт 2 раб. дня - рано напоминать
+  const fresh = computeMetrics(base({ hireDate: '2026-11-02' }), TODAY).pulseDue;
+  assert.equal(fresh.opensOn, '2026-11-09');
+  assert.equal(fresh.waited, 2);
+  assert.ok(fresh.waited < PULSE_REMIND_AFTER);
+  // вышел 30.10 (пт): опрос открылся 06.11 (пт), выходные не считаем - 09, 10, 11.11 = 3 раб. дня
+  const late = computeMetrics(base({ hireDate: '2026-10-30' }), TODAY).pulseDue;
+  assert.equal(late.waited, 3);
+  assert.equal(late.closesOn, '2026-11-19');
+  // ответил - напоминать не о чем
+  const answered = base({ hireDate: '2026-10-30', pulse: { d7: { date: '2026-11-10', clarity: 4, support: 4, comfort: 4 } } });
+  assert.equal(computeMetrics(answered, TODAY).pulseDue, null);
+});

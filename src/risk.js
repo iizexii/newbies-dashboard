@@ -32,6 +32,7 @@ export const PULSE_QUESTIONS = [
   { key: 'comfort', label: 'Комфортно в коллективе' },
 ];
 const PULSE_WINDOW = 14; // сколько дней после контрольной точки опрос доступен
+export const PULSE_REMIND_AFTER = 3; // рабочих дней без ответа - и руководитель получает напоминание
 
 /** opts.checklist - чек-лист первых дней отдела [{id, text}]. */
 export function computeMetrics(emp, today, { checklist = [] } = {}) {
@@ -106,7 +107,12 @@ export function computeMetrics(emp, today, { checklist = [] } = {}) {
   const pulses = PULSES.map((p) => {
     const a = emp.pulse?.[p.key];
     const answer = a && a.date <= end ? a : null;
-    return { ...p, answer, open: !answer && tenureDays > p.day && tenureDays <= p.day + PULSE_WINDOW };
+    const open = !answer && tenureDays > p.day && tenureDays <= p.day + PULSE_WINDOW;
+    const opensOn = addDays(emp.hireDate, p.day); // первый день, когда опрос виден сотруднику
+    const closesOn = addDays(emp.hireDate, p.day + PULSE_WINDOW - 1); // последний день
+    // сколько рабочих дней опрос ждёт ответа (день появления не считаем)
+    const waited = open ? workdaysBetween(addDays(opensOn, 1), end).length : 0;
+    return { ...p, answer, open, opensOn, closesOn, waited };
   });
   const lastPulse = [...pulses].reverse().find((p) => p.answer) || null;
   const pulseDue = emp.status === 'active' ? pulses.find((p) => p.open) || null : null;

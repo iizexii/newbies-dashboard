@@ -262,6 +262,7 @@ export function generateDemo(today, seed = 20261111) {
   // Отдельные генераторы, чтобы добавление новых полей не меняло остальную картину.
   addTaskEdits(employees, today, rng(seed + 1));
   addPulses(employees, today, rng(seed + 2));
+  leavePulsesUnanswered(employees, today);
   addOnboarding(employees, today, rng(seed + 3));
 
   // Давно работающие сотрудники (приняты 1-7 лет назад): без них почти все увольнения
@@ -317,7 +318,7 @@ export function generateDemo(today, seed = 20261111) {
   }));
 
   return {
-    version: 5,
+    version: 6,
     generatedFor: today,
     departments: structuredClone(DEFAULT_DEPARTMENTS),
     managers: structuredClone(DEFAULT_MANAGERS),
@@ -371,6 +372,23 @@ function addPulses(employees, today, r) {
       const fresh = diffDays(date, today) <= 6;
       const list = comments[e._profile];
       e.pulse[key] = { date, clarity: score(), support: score(), comfort: score(), comment: list[Math.floor(r() * list.length)], hrSeen: !fresh, mgrSeen: !fresh };
+    }
+  }
+}
+
+/**
+ * Часть новичков тянет с ответом на опрос: опрос открыт 5-11 дней, ответа нет.
+ * На них в демо видно напоминание руководителю. Выбор без случайности, чтобы не менять остальные данные:
+ * все "проблемные" и каждый второй из остальных.
+ */
+function leavePulsesUnanswered(employees, today) {
+  let n = 0;
+  for (const e of employees) {
+    if (e.status !== 'active') continue;
+    const tenure = diffDays(e.hireDate, today) + 1;
+    for (const [key, day] of [['d7', 7], ['d30', 30]]) {
+      if (!e.pulse[key] || tenure < day + 6 || tenure > day + 12) continue;
+      if (e._profile !== 'engaged' || n++ % 2 === 0) delete e.pulse[key];
     }
   }
 }

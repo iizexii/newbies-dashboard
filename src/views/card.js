@@ -1,6 +1,6 @@
 // Карточка новичка (выезжающая панель). HR видит всё, руководитель - свои действия.
 import { ctx, esc, fmt, plural, assess, trend, managerName, deptName, checklistOf, help } from '../ctx.js';
-import { LEVELS, ADAPTATION_DAYS, CHECKINS, PULSE_QUESTIONS } from '../risk.js';
+import { LEVELS, ADAPTATION_DAYS, CHECKINS, PULSE_QUESTIONS, PULSE_REMIND_AFTER } from '../risk.js';
 import { addDays, diffDays } from '../dates.js';
 import { badge } from './hr.js';
 import { changeMark } from './task.js';
@@ -42,13 +42,22 @@ export function checklistBlock(e, editable) {
   }).join('')}</ul>`;
 }
 
+/** Опрос открыт, ответа нет: сколько ждёт и до какого числа доступен. */
+function pulseWait(m) {
+  const d = m.pulseDue;
+  if (!d) return '';
+  const late = d.waited >= PULSE_REMIND_AFTER;
+  return `<p class="${late ? 'red' : 'muted'}">Опрос ${d.day}-го дня ждёт ответа сотрудника${d.waited ? ` ${d.waited} раб. дн.` : ''}, доступен до ${fmt(d.closesOn)}.${late ? ' Напомните при встрече.' : ''}</p>`;
+}
+
 function pulseBlock(m) {
   const answered = m.pulses.filter((p) => p.answer);
-  if (!answered.length) return `<p class="muted">${m.pulseDue ? `Опрос ${m.pulseDue.day}-го дня ждёт ответа сотрудника.` : 'Опросов пока не было: они приходят на 7-й и 30-й день.'}</p>`;
+  if (!answered.length) return m.pulseDue ? pulseWait(m) : '<p class="muted">Опросов пока не было: они приходят на 7-й и 30-й день.</p>';
   return `<table class="mini-table"><thead><tr><th></th>${answered.map((p) => `<th class="num">${p.day}-й день<div class="muted small">${fmt(p.answer.date)}</div></th>`).join('')}</tr></thead><tbody>
     ${PULSE_QUESTIONS.map((q) => `<tr><td>${esc(q.label)}</td>${answered.map((p) => { const v = p.answer[q.key]; return `<td class="num ${v <= 2 ? 'red' : v >= 4 ? 'ok' : ''}"><b>${v}</b> из 5</td>`; }).join('')}</tr>`).join('')}
   </tbody></table>
-  ${answered.filter((p) => p.answer.comment).map((p) => `<p class="quote">"${esc(p.answer.comment)}" <span class="muted small">- ${p.day}-й день</span></p>`).join('')}`;
+  ${answered.filter((p) => p.answer.comment).map((p) => `<p class="quote">"${esc(p.answer.comment)}" <span class="muted small">- ${p.day}-й день</span></p>`).join('')}
+  ${pulseWait(m)}`;
 }
 
 export function activityStrip(e, m) {

@@ -1,10 +1,11 @@
 // Экраны HR: обзор, новички, аналитика, задачи руководителям.
-import { ctx, esc, pct, fmt, plural, assess, trend, trendMark, help, managerName, deptName, emp, newcomers, RISK_COLORS } from '../ctx.js';
+import { ctx, esc, pct, fmt, plural, assess, tenureOf, trend, trendMark, help, managerName, deptName, emp, newcomers, RISK_COLORS } from '../ctx.js';
 import { isEscalated, overdueWorkdays } from '../notify.js';
 import { icon } from '../icons.js';
 import { LEVELS } from '../risk.js';
 import { buildAnalytics } from '../analytics.js';
 import { stackedBars, columns, hBars } from '../charts.js';
+import { diffDays } from '../dates.js';
 
 export const badge = (a) => `<span class="badge ${a.level}">${LEVELS[a.level].short}${a.score ? ` · ${a.score}` : ''}</span>`;
 
@@ -34,7 +35,7 @@ export function overview() {
     ${kpi(list.length, 'новичков сейчас', `работают меньше 90 дней${worse ? ` · у ${worse} риск вырос за неделю` : ''}`, '', 'data-act="goto-newbies" data-risk="all"')}
     ${kpi(by('high').length, 'с высоким риском', 'нужно действие сегодня', 'red', 'data-act="goto-newbies" data-risk="high"')}
     ${kpi(by('medium').length, 'требуют внимания', '1–2 тревожных сигнала', 'amber', 'data-act="goto-newbies" data-risk="medium"')}
-    ${kpi(pct(A.earlyRate), 'уходят в первые 90 дней', `${A.early} из ${A.matured} принятых за год`, '', 'data-act="page" data-p="analytics"')}
+    ${kpi(pct(A.earlyShareOfLeavers), 'из уволившихся не доработали 90 дней', `${A.earlyLeavers} из ${A.leavers} за 12 мес.`, '', 'data-act="page" data-p="analytics"')}
   </section>
 
   <div class="grid2">
@@ -85,12 +86,12 @@ export function escRow(x) {
 
 // ---------- Новички ----------
 const TENURE = {
-  adapt: { label: 'Все новички (до 90 дней)', test: (e, a) => e.status === 'active' && a.metrics.tenureDays <= 90 },
-  w1: { label: 'Первая неделя', test: (e, a) => e.status === 'active' && a.metrics.tenureDays <= 7 },
-  m1: { label: '8–30 дней', test: (e, a) => e.status === 'active' && a.metrics.tenureDays >= 8 && a.metrics.tenureDays <= 30 },
-  m2: { label: '31–60 дней', test: (e, a) => e.status === 'active' && a.metrics.tenureDays >= 31 && a.metrics.tenureDays <= 60 },
-  m3: { label: '61–90 дней', test: (e, a) => e.status === 'active' && a.metrics.tenureDays >= 61 && a.metrics.tenureDays <= 90 },
-  left: { label: 'Уволившиеся', test: (e) => e.status === 'left' },
+  adapt: { label: 'Все новички (до 90 дней)', test: (e, d) => e.status === 'active' && d <= 90 },
+  w1: { label: 'Первая неделя', test: (e, d) => e.status === 'active' && d <= 7 },
+  m1: { label: '8–30 дней', test: (e, d) => e.status === 'active' && d >= 8 && d <= 30 },
+  m2: { label: '31–60 дней', test: (e, d) => e.status === 'active' && d >= 31 && d <= 60 },
+  m3: { label: '61–90 дней', test: (e, d) => e.status === 'active' && d >= 61 && d <= 90 },
+  left: { label: 'Уволившиеся (принятые за год)', test: (e) => e.status === 'left' && diffDays(e.hireDate, ctx.today) < 365 },
 };
 
 const SORTS = {
@@ -106,8 +107,8 @@ function rows() {
   const q = ui.q.trim().toLowerCase();
   const out = ctx.state.employees
     .filter((e) => ui.dept === 'all' || e.dept === ui.dept)
+    .filter((e) => TENURE[ui.tenure].test(e, tenureOf(e)))
     .map((e) => ({ e, a: assess(e) }))
-    .filter(({ e, a }) => TENURE[ui.tenure].test(e, a))
     .filter(({ a }) => ui.risk === 'all' || a.level === ui.risk)
     .filter(({ e }) => ui.manager === 'all' || e.managerId === ui.manager)
     .filter(({ e }) => !q || `${e.name} ${e.position} ${e.mentor} ${managerName(e.managerId)}`.toLowerCase().includes(q));
@@ -192,8 +193,8 @@ export function analytics() {
     </div>
     <section class="kpis">
       ${kpi(A.hires, 'вышли на работу', 'за последние 12 месяцев')}
-      ${kpi(A.early, 'уволились в первые 90 дней', `всего уволились за период: ${A.leftAll}`, 'red')}
-      ${kpi(pct(A.earlyRate), 'доля ранних уходов', `${A.early} из ${A.matured} — считаем только тех, у кого 90 дней уже прошли`, 'amber')}
+      ${kpi(pct(A.earlyShareOfLeavers), 'из уволившихся не доработали 90 дней', `${A.earlyLeavers} из ${A.leavers} уволившихся за 12 мес. (любой стаж)`, 'red')}
+      ${kpi(pct(A.earlyRate), 'принятых ушли в первые 90 дней', `${A.early} из ${A.matured} — только те, у кого 90 дней уже прошли`, 'amber')}
       ${kpi(A.median == null ? '—' : `${A.median} дн.`, 'типичный срок до ухода', 'медиана среди ушедших в первые 90 дней')}
     </section>
     <div class="grid2">

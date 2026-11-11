@@ -264,6 +264,40 @@ export function generateDemo(today, seed = 20261111) {
   addPulses(employees, today, rng(seed + 2));
   addOnboarding(employees, today, rng(seed + 3));
 
+  // Давно работающие сотрудники (приняты 1–7 лет назад): без них почти все увольнения
+  // в демо были бы ранними. У компании ~400 человек, и ранние уходы — около трети всех уходов.
+  {
+    const rv = rng(seed + 4);
+    const pv = (arr) => arr[Math.floor(rv() * arr.length)];
+    const bv = (a, b) => a + Math.floor(rv() * (b - a + 1));
+    const lateReasons = ['Нашёл другую работу', 'Нашёл другую работу', 'Ожидания по деньгам не совпали', 'Тяжёлый график / нагрузка', 'Личные обстоятельства'];
+    const vetName = () => {
+      for (;;) {
+        const female = rv() < 0.45;
+        const last = pv(LAST);
+        const name = female ? `${last.replace(/(ов|ев|ёв|ин)$/, '$1а').replace(/ий$/, 'ая')} ${pv(FEMALE_FIRST)}` : `${last} ${pv(MALE_FIRST)}`;
+        if (!usedNames.has(name)) { usedNames.add(name); return name; }
+      }
+    };
+    const pickDeptV = () => { let x = rv(); for (const [d, w] of deptWeights) { if ((x -= w) < 0) return d; } return 'wh'; };
+    for (let k = 0; k < 380; k++) {
+      let hireDate = addDays(today, -bv(366, 2555));
+      while (!isWorkday(hireDate)) hireDate = addDays(hireDate, -1);
+      const dept = pickDeptV();
+      const manager = pv(DEFAULT_MANAGERS.filter((m) => m.dept === dept));
+      let status = 'active', leftDate = null, leftReason = null;
+      if (rv() < 0.16) { // ~16% опытных ушли за последний год — обычная текучесть для ритейла
+        leftDate = addDays(today, -bv(1, 364));
+        while (!isWorkday(leftDate)) leftDate = addDays(leftDate, -1);
+        status = 'left'; leftReason = pv(lateReasons);
+      }
+      employees.push({
+        id: `v${k + 1}`, attendance: undefined, name: vetName(), dept, position: pv(POSITIONS[dept]), managerId: manager.id,
+        mentor: '', hireDate, status, leftDate, leftReason, checkins: {}, tasks: [], pulse: {}, onboarding: {}, _profile: 'veteran',
+      });
+    }
+  }
+
   // Пара поручений HR → руководителям, чтобы кабинеты не открывались пустыми.
   const cand = employees.filter((e) => e.status === 'active' && e._profile !== 'engaged' && diffDays(e.hireDate, today) < 85 && diffDays(e.hireDate, today) > 14);
   const actions = cand.slice(0, 3).map((e, k) => ({
@@ -283,7 +317,7 @@ export function generateDemo(today, seed = 20261111) {
   }));
 
   return {
-    version: 3,
+    version: 4,
     generatedFor: today,
     departments: structuredClone(DEFAULT_DEPARTMENTS),
     managers: structuredClone(DEFAULT_MANAGERS),

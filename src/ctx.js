@@ -1,5 +1,6 @@
 // Общее состояние приложения и мелкие помощники для всех экранов.
 import { assessRisk, riskTrend } from './risk.js';
+import { diffDays } from './dates.js';
 export { fmt } from './dates.js';
 
 export const ctx = {
@@ -75,7 +76,9 @@ export function findTask(id) {
 
 /** Кнопка «?» с пояснением: текст виден по наведению и по фокусу с клавиатуры. */
 export const help = (text) => `<button type="button" class="q" data-tip="${esc(text)}" aria-label="Пояснение: ${esc(text)}">?</button>`;
-export const inAdaptation = (e) => e.status === 'active' && assess(e).metrics.tenureDays <= 90;
+// Стаж на сегодня без полного расчёта риска: в компании ~400 человек, риск нужен только новичкам.
+export const tenureOf = (e) => Math.max(1, diffDays(e.hireDate, e.status === 'left' && e.leftDate ? e.leftDate : ctx.today) + 1);
+export const inAdaptation = (e) => e.status === 'active' && tenureOf(e) <= 90;
 export const newcomers = () => ctx.state.employees.filter(inAdaptation);
 
 // Цвета: статусы риска (всегда вместе с текстом) и две серии графиков.

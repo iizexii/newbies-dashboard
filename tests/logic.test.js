@@ -283,3 +283,16 @@ test('поздно закрытая задача перестаёт давать
   t.closed = TODAY;
   assert.equal(computeMetrics(e, TODAY).overdue, 0);
 });
+
+test('демо как у заказчика: ~400 работающих, ранние уходы — около трети всех уволившихся за год', async () => {
+  const today = '2026-11-11';
+  const s = generateDemo(today);
+  const active = s.employees.filter((e) => e.status === 'active').length;
+  assert.ok(active >= 350 && active <= 450, `работающих ${active}`);
+  const A = buildAnalytics(s, today);
+  assert.ok(A.leavers > 0 && A.earlyLeavers <= A.leavers);
+  assert.ok(A.earlyShareOfLeavers >= 0.25 && A.earlyShareOfLeavers <= 0.42, `доля ${A.earlyShareOfLeavers}`);
+  // по отделу считается тем же способом и не больше общего
+  const d = buildAnalytics(s, today, s.departments[0].id);
+  assert.ok(d.leavers <= A.leavers && d.earlyLeavers <= A.earlyLeavers);
+});

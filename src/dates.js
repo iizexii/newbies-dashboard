@@ -33,10 +33,11 @@ export function isWorkday(iso) {
 export function workdaysBetween(fromIso, toIso) {
   const out = [];
   if (fromIso > toIso) return out;
-  let cur = fromIso;
-  while (cur <= toIso) {
-    if (isWorkday(cur)) out.push(cur);
-    cur = addDays(cur, 1);
+  // один объект Date вместо нового на каждый день: стаж в годы считается быстро
+  const d = fromISO(fromIso);
+  for (let cur = fromIso; cur <= toIso; d.setDate(d.getDate() + 1), cur = toISO(d)) {
+    const wd = d.getDay();
+    if (wd !== 0 && wd !== 6) out.push(cur);
   }
   return out;
 }

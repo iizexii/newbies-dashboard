@@ -1,5 +1,5 @@
 // Админка HR: справочники сотрудников, руководителей и отделов.
-import { ctx, esc, fmt, plural, assess, managerName, deptName } from '../ctx.js';
+import { ctx, esc, fmt, plural, assess, tenureOf, managerName, deptName } from '../ctx.js';
 
 export function admin() {
   const t = ctx.ui.adminTab;
@@ -20,7 +20,7 @@ function employees() {
   const q = a.q.trim().toLowerCase();
   const list = ctx.state.employees
     .filter((e) => a.dept === 'all' || e.dept === a.dept)
-    .filter((e) => a.status === 'all' || (a.status === 'left' ? e.status === 'left' : a.status === 'active' ? e.status === 'active' : e.status === 'active' && assess(e).metrics.tenureDays <= 90))
+    .filter((e) => a.status === 'all' || (a.status === 'left' ? e.status === 'left' : a.status === 'active' ? e.status === 'active' : e.status === 'active' && tenureOf(e) <= 90))
     .filter((e) => !q || `${e.name} ${e.position} ${managerName(e.managerId)}`.toLowerCase().includes(q));
   const key = {
     name: (e) => e.name, dept: (e) => deptName(e.dept), position: (e) => e.position,
@@ -42,7 +42,7 @@ function employees() {
       <tbody>${list.map((e) => `<tr>
         <td><b>${esc(e.name)}</b></td><td>${esc(deptName(e.dept))}</td><td>${esc(e.position)}</td><td>${esc(managerName(e.managerId))}</td>
         <td>${e.mentor ? esc(e.mentor) : '<span class="muted">—</span>'}</td><td class="nowrap">${fmt(e.hireDate)}</td>
-        <td class="nowrap">${e.status === 'left' ? `<span class="muted">уволен ${fmt(e.leftDate)}</span>` : assess(e).metrics.tenureDays <= 90 ? '<span class="badge low">новичок</span>' : 'работает'}</td>
+        <td class="nowrap">${e.status === 'left' ? `<span class="muted">уволен ${fmt(e.leftDate)}</span>` : tenureOf(e) <= 90 ? '<span class="badge low">новичок</span>' : 'работает'}</td>
         <td class="row-actions"><button class="small" data-act="edit-emp" data-id="${e.id}">Изменить</button><button class="small danger" data-act="del-emp" data-id="${e.id}" aria-label="Удалить">Удалить</button></td>
       </tr>`).join('')}</tbody>
     </table></div>`;
@@ -57,7 +57,7 @@ function managers() {
       <tbody>${S.departments.flatMap((d) => S.managers.filter((m) => m.dept === d.id)).concat(S.managers.filter((m) => !S.departments.some((d) => d.id === m.dept))).map((m) => {
         const people = S.employees.filter((e) => e.managerId === m.id && e.status === 'active');
         return `<tr><td><b>${esc(m.name)}</b></td><td>${esc(deptName(m.dept))}</td><td class="num">${m.b24Id ?? '<span class="muted">не указан</span>'}</td>
-          <td class="num">${people.length}</td><td class="num">${people.filter((e) => assess(e).metrics.tenureDays <= 90).length}</td>
+          <td class="num">${people.length}</td><td class="num">${people.filter((e) => tenureOf(e) <= 90).length}</td>
           <td class="row-actions"><button class="small" data-act="edit-mgr" data-id="${m.id}">Изменить</button><button class="small danger" data-act="del-mgr" data-id="${m.id}">Удалить</button></td></tr>`;
       }).join('')}</tbody>
     </table></div>`;

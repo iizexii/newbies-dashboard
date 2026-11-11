@@ -1,7 +1,7 @@
 import { todayISO, nextWorkday, diffDays } from './dates.js';
 import { LEAVE_REASONS, DEFAULT_CHECKLIST } from './data.js';
 import { loadState, saveState, resetState } from './store.js';
-import { ctx, HR_NAME, esc, fmt, uid, plural, assess, resetCache, manager, managerName, deptName, emp, newcomers, findTask } from './ctx.js';
+import { ctx, HR_NAME, esc, fmt, uid, plural, assess, tenureOf, resetCache, manager, managerName, deptName, emp, newcomers, findTask } from './ctx.js';
 import { editTask, returnForRework, markSeen, isNewTask, hasUnseenChanges } from './tasks.js';
 import { notifications, markAllRead } from './notify.js';
 import { icon } from './icons.js';
@@ -298,7 +298,7 @@ function editTaskModal(id) {
 }
 
 function mentorModal(e) {
-  const colleagues = ctx.state.employees.filter((x) => x.dept === e.dept && x.status === 'active' && x.id !== e.id && assess(x).metrics.tenureDays > 180).map((x) => x.name).sort();
+  const colleagues = ctx.state.employees.filter((x) => x.dept === e.dept && x.status === 'active' && x.id !== e.id && tenureOf(x) > 180).map((x) => x.name).sort();
   openModal(`Наставник для ${e.name}`, `
     <form data-form="mentor" data-id="${e.id}">
       <label>ФИО наставника<input name="mentor" required list="mentors" value="${esc(e.mentor)}" placeholder="Опытный сотрудник отдела"></label>

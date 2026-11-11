@@ -2,7 +2,7 @@
 import { generateDemo } from './data.js';
 import { addDays, diffDays } from './dates.js';
 
-const KEY = 'novichok.state.v3';
+const KEY = 'novichok.state.v4';
 
 export function loadState(today) {
   let state = null;
@@ -10,7 +10,7 @@ export function loadState(today) {
     const raw = localStorage.getItem(KEY);
     if (raw) state = JSON.parse(raw);
   } catch { /* приватный режим или битые данные — начнём с демо */ }
-  if (!state || state.version !== 3) state = generateDemo(today);
+  if (!state || state.version !== 4) state = generateDemo(today);
   return keepDemoFresh(state, today);
 }
 

@@ -59,6 +59,10 @@ export function buildAnalytics(state, today, deptId = 'all') {
   const matured = hires.filter((e) => isMatured(e, today));
   const early = hires.filter(isEarlyLeaver);
   const leftAll = hires.filter((e) => e.status === 'left');
+  // Метрика заказчика: «каждый третий из ушедших не доработал до 3 месяцев» —
+  // все уволившиеся за 12 мес. (любой стаж) и доля ранних среди них.
+  const leavers = state.employees.filter((e) => e.status === 'left' && e.leftDate && e.leftDate >= from && (deptId === 'all' || e.dept === deptId));
+  const earlyLeavers = leavers.filter(isEarlyLeaver);
 
   const tenures = early.map(tenureAtLeave).sort((a, b) => a - b);
   const median = tenures.length ? tenures[Math.floor(tenures.length / 2)] : null;
@@ -120,6 +124,9 @@ export function buildAnalytics(state, today, deptId = 'all') {
     early: early.length,
     leftAll: leftAll.length,
     earlyRate: rate(early.length, matured.length),
+    leavers: leavers.length,
+    earlyLeavers: earlyLeavers.length,
+    earlyShareOfLeavers: rate(earlyLeavers.length, leavers.length),
     median,
     byDept, byWeek, byManager, byReason,
     compare, earlyN: earlyGroup.length, stayN: stayGroup.length,

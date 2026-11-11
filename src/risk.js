@@ -63,7 +63,8 @@ export function computeMetrics(emp, today, { checklist = [] } = {}) {
     if (t.started && t.started <= end) activeSet.add(t.started);
     if (t.closed && t.closed <= end) activeSet.add(t.closed);
   }
-  const activity = workdays.map((d) => ({ date: d, active: activeSet.has(d), current: !closedWorkdays.includes(d) }));
+  const closedSet = new Set(closedWorkdays);
+  const activity = workdays.map((d) => ({ date: d, active: activeSet.has(d), current: !closedSet.has(d) }));
 
   // Серия «без действий» считается по завершённым дням, но действие сегодня её обнуляет.
   let idleStreak = 0;

@@ -68,14 +68,15 @@ function depts() {
   return `
     <form data-form="dept-add" class="toolbar"><input name="name" required maxlength="40" placeholder="Новый отдел, например «Интернет-магазин»"><button class="primary">＋ Добавить отдел</button></form>
     <div class="table-wrap"><table class="list admin">
-      <thead><tr><th>Порядок</th><th>Название <small class="muted">(можно править прямо здесь)</small></th><th class="num">Сотрудников</th><th class="num">Руководителей</th><th></th></tr></thead>
+      <thead><tr><th>Порядок</th><th>Название <small class="muted">(можно править прямо здесь)</small></th><th class="num">Сотрудников</th><th class="num">Руководителей</th><th>Чек-лист первых дней</th><th></th></tr></thead>
       <tbody>${S.departments.map((d, i) => `<tr>
         <td class="nowrap"><button class="icon" data-act="dept-up" data-id="${d.id}" ${i === 0 ? 'disabled' : ''} aria-label="Выше">↑</button><button class="icon" data-act="dept-down" data-id="${d.id}" ${i === S.departments.length - 1 ? 'disabled' : ''} aria-label="Ниже">↓</button></td>
         <td><input value="${esc(d.name)}" data-rename="${d.id}" maxlength="40" aria-label="Название отдела"></td>
         <td class="num">${S.employees.filter((e) => e.dept === d.id && e.status === 'active').length}</td>
         <td class="num">${S.managers.filter((m) => m.dept === d.id).length}</td>
+        <td><span class="muted">${(d.checklist || []).length} пунктов</span> <button class="small" data-act="dept-checklist" data-id="${d.id}">Настроить</button></td>
         <td class="row-actions"><button class="small danger" data-act="dept-del" data-id="${d.id}">Удалить</button></td>
       </tr>`).join('')}</tbody>
     </table></div>
-    <p class="note">Порядок здесь = порядок вкладок. Название сохраняется при выходе из поля.</p>`;
+    <p class="note">Порядок здесь = порядок вкладок. Название сохраняется при выходе из поля. Чек-лист — что должно случиться с новичком в первые 3 рабочих дня.</p>`;
 }

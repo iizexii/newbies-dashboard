@@ -2,7 +2,7 @@
 import { generateDemo } from './data.js';
 import { addDays, diffDays } from './dates.js';
 
-const KEY = 'novichok.state.v2';
+const KEY = 'novichok.state.v3';
 
 export function loadState(today) {
   let state = null;
@@ -10,7 +10,7 @@ export function loadState(today) {
     const raw = localStorage.getItem(KEY);
     if (raw) state = JSON.parse(raw);
   } catch { /* приватный режим или битые данные — начнём с демо */ }
-  if (!state || state.version !== 2) state = generateDemo(today);
+  if (!state || state.version !== 3) state = generateDemo(today);
   return keepDemoFresh(state, today);
 }
 
@@ -42,11 +42,18 @@ export function keepDemoFresh(state, today) {
     e.leftDate = sh(e.leftDate);
     for (const k of Object.keys(e.checkins || {})) e.checkins[k] = sh(e.checkins[k]);
     if (e.attendance) e.attendance = Object.fromEntries(Object.entries(e.attendance).map(([d, t]) => [sh(d), t]));
+    e.mentorSince = sh(e.mentorSince);
     for (const t of e.tasks || []) {
       t.created = sh(t.created); t.deadline = sh(t.deadline); t.started = sh(t.started); t.closed = sh(t.closed);
+      for (const h of t.history || []) {
+        h.at = sh(h.at);
+        if (h.changes.deadline) { h.changes.deadline.from = sh(h.changes.deadline.from); h.changes.deadline.to = sh(h.changes.deadline.to); }
+      }
     }
+    for (const p of Object.values(e.pulse || {})) p.date = sh(p.date);
+    for (const k of Object.keys(e.onboarding || {})) e.onboarding[k] = sh(e.onboarding[k]);
   }
-  for (const a of state.actions || []) { a.created = sh(a.created); a.deadline = sh(a.deadline); a.doneAt = sh(a.doneAt); }
+  for (const a of state.actions || []) { a.created = sh(a.created); a.deadline = sh(a.deadline); a.doneAt = sh(a.doneAt); a.remindedAt = sh(a.remindedAt); }
   state.generatedFor = sh(state.generatedFor);
   return state;
 }

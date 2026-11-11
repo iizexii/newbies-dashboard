@@ -1,8 +1,10 @@
 // Карточка новичка (выезжающая панель). HR видит всё, руководитель — свои действия.
-import { ctx, esc, fmt, assess, managerName, deptName } from '../ctx.js';
-import { LEVELS, ADAPTATION_DAYS, CHECKINS } from '../risk.js';
+import { ctx, esc, fmt, plural, assess, trend, managerName, deptName, checklistOf, help } from '../ctx.js';
+import { LEVELS, ADAPTATION_DAYS, CHECKINS, PULSE_QUESTIONS } from '../risk.js';
 import { addDays, diffDays } from '../dates.js';
 import { badge } from './hr.js';
+import { changeMark } from './task.js';
+import { icon } from '../icons.js';
 
 export function timeline(m) {
   const day = Math.min(m.tenureDays, ADAPTATION_DAYS);
@@ -27,6 +29,26 @@ export function checkinList(e, m, canMark) {
         ? `<button class="link" data-act="checkin-undo" data-id="${e.id}" data-k="${c.key}">отменить</button>`
         : `<button class="small" data-act="checkin" data-id="${e.id}" data-k="${c.key}">Провёл встречу</button>`) : ''}
     </div>`).join('');
+}
+
+/** Чек-лист первых дней отдела. Отмечать может сам новичок, руководитель или HR. */
+export function checklistBlock(e, editable) {
+  const list = checklistOf(e.dept);
+  const done = list.filter((c) => e.onboarding?.[c.id]).length;
+  return `<div class="cl-head"><span class="pbar"><i style="width:${list.length ? (done / list.length) * 100 : 0}%"></i></span> ${done} из ${list.length}</div>
+  <ul class="checklist">${list.map((c) => {
+    const d = e.onboarding?.[c.id];
+    return `<li><label class="check ${d ? 'done' : ''}"><input type="checkbox" ${d ? 'checked' : ''} ${editable && e.status === 'active' ? '' : 'disabled'} data-act="ob-toggle" data-id="${e.id}" data-k="${c.id}"> ${esc(c.text)}${d ? ` <small class="muted">${fmt(d)}</small>` : ''}</label></li>`;
+  }).join('')}</ul>`;
+}
+
+function pulseBlock(m) {
+  const answered = m.pulses.filter((p) => p.answer);
+  if (!answered.length) return `<p class="muted">${m.pulseDue ? `Опрос ${m.pulseDue.day}-го дня ждёт ответа сотрудника.` : 'Опросов пока не было: они приходят на 7-й и 30-й день.'}</p>`;
+  return `<table class="mini-table"><thead><tr><th></th>${answered.map((p) => `<th class="num">${p.day}-й день<div class="muted small">${fmt(p.answer.date)}</div></th>`).join('')}</tr></thead><tbody>
+    ${PULSE_QUESTIONS.map((q) => `<tr><td>${esc(q.label)}</td>${answered.map((p) => { const v = p.answer[q.key]; return `<td class="num ${v <= 2 ? 'red' : v >= 4 ? 'ok' : ''}"><b>${v}</b> из 5</td>`; }).join('')}</tr>`).join('')}
+  </tbody></table>
+  ${answered.filter((p) => p.answer.comment).map((p) => `<p class="quote">«${esc(p.answer.comment)}» <span class="muted small">— ${p.day}-й день</span></p>`).join('')}`;
 }
 
 export function activityStrip(e, m) {
@@ -58,10 +80,10 @@ export function drawer(e) {
        <button data-act="mentor" data-id="${e.id}">${e.mentor ? 'Сменить наставника' : 'Назначить наставника'}</button>`;
 
   return `<div class="scrim" data-act="close"></div>
-  <aside class="drawer" role="dialog" aria-label="Карточка новичка">
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="Карточка новичка: ${esc(e.name)}">
     <div class="d-head">
       <div><h2>${esc(e.name)}</h2><div class="muted">${esc(e.position)} · ${esc(deptName(e.dept))}</div></div>
-      <button class="icon" data-act="close" title="Закрыть (Esc)">✕</button>
+      <button class="icon" data-act="close" aria-label="Закрыть (Esc)">${icon('close')}</button>
     </div>
     <dl class="facts">
       <div><dt>Руководитель</dt><dd>${esc(managerName(e.managerId))}</dd></div>
@@ -71,7 +93,11 @@ export function drawer(e) {
     </dl>
     ${timeline(m)}
     <section class="risk-box ${a.level}">
-      <div class="rb-head">${badge(a)} <span>${LEVELS[a.level].label}</span></div>
+      <div class="rb-head">${badge(a)} <span>${LEVELS[a.level].label}</span>${(() => {
+        const t = trend(e);
+        if (!t) return '';
+        return t.delta > 0 ? `<span class="trend up">▲ +${t.delta} за неделю</span>` : t.delta < 0 ? `<span class="trend down">▼ ${t.delta} за неделю</span>` : '<span class="muted small">без изменений за неделю</span>';
+      })()}</div>
       ${a.reasons.length ? `<ul class="reasons">${a.reasons.map((r) => `<li><b>+${r.points}</b> ${esc(r.text)}</li>`).join('')}</ul>` : ''}
       ${a.ok.length ? `<ul class="oks">${a.ok.map((t) => `<li>✓ ${esc(t)}</li>`).join('')}</ul>` : ''}
       ${a.level === 'done' ? '<p class="muted">Прошёл 90 дней — риск раннего ухода больше не считаем.</p>' : ''}
@@ -83,6 +109,10 @@ export function drawer(e) {
       <small class="muted">${esc(managerName(x.responsibleId))} · срок ${fmt(x.deadline)}${x.status === 'done' ? ` · выполнена ${fmt(x.doneAt)}` : ''}${x.comment ? ` · «${esc(x.comment)}»` : ''}</small></div>`).join('')}</section>` : ''}
 
     <section><h3>Встречи с руководителем</h3>${checkinList(e, m, true)}</section>
+
+    ${checklistOf(e.dept).length ? `<section><h3>Первые дни: чек-лист отдела ${help('Пункты настраиваются в «Админка → Отделы». Если к 3-му рабочему дню что-то не выполнено, это сигнал риска.')}</h3>${checklistBlock(e, true)}</section>` : ''}
+
+    <section><h3>Опрос новичка ${help('Три вопроса на 7-й и 30-й день, оценки 1–5. Оценка 1–2 по любому вопросу — сигнал риска +2.')}</h3>${pulseBlock(m)}</section>
 
     <section>
       <h3>Задачи в Битрикс24 и отметки</h3>
@@ -100,9 +130,9 @@ export function drawer(e) {
 
     <section>
       <h3>Последние задачи ${tasks.length > 6 ? `<button class="link" data-act="all-tasks">${ctx.ui.showAllTasks ? 'свернуть' : `все ${tasks.length}`}</button>` : ''}</h3>
-      ${tasks.length ? `<table class="tasks"><thead><tr><th>Задача</th><th>Поставлена</th><th>Срок</th><th>Статус</th></tr></thead><tbody>
-        ${shown.map((t) => `<tr><td>${esc(t.title)}</td><td class="nowrap">${fmt(t.created)}</td><td class="nowrap">${fmt(t.deadline)}</td><td>${taskStatus(t, m.end)}</td></tr>`).join('')}
-      </tbody></table>` : '<p class="muted">Задач в Б24 пока нет.</p>'}
+      ${tasks.length ? `<table class="tasks"><thead><tr><th>Задача</th><th>Срок</th><th>Статус</th></tr></thead><tbody>
+        ${shown.map((t) => `<tr data-act="task-view" data-id="${t.id}" class="click"><td><b>${esc(t.title)}</b> ${changeMark(t, false)}<div class="muted clamp">${esc(String(t.description || '').split('\n')[0])}</div></td><td class="nowrap">${fmt(t.deadline)}</td><td>${taskStatus(t, m.end)}</td></tr>`).join('')}
+      </tbody></table><p class="note">Клик по задаче — описание и история изменений${role !== 'employee' && e.status === 'active' ? ', там же можно изменить задачу' : ''}.</p>` : '<p class="muted">Задач в Б24 пока нет.</p>'}
     </section>
   </aside>`;
 }

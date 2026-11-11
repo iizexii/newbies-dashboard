@@ -1,6 +1,6 @@
 // Метрики новичка и объяснимый риск раннего ухода.
 // Никакого "ИИ-прогноза": только проверяемые правила, у каждого правила — текст и вес.
-import { diffDays, workdaysBetween } from './dates.js';
+import { addDays, diffDays, workdaysBetween } from './dates.js';
 
 export const ADAPTATION_DAYS = 90;
 
@@ -24,7 +24,17 @@ export function endDate(emp, today) {
   return emp.status === 'left' && emp.leftDate ? emp.leftDate : today;
 }
 
-export function computeMetrics(emp, today) {
+// Короткий опрос новичка (1–5). Ответы видят HR и руководитель — это сказано на экране.
+export const PULSES = [{ key: 'd7', day: 7 }, { key: 'd30', day: 30 }];
+export const PULSE_QUESTIONS = [
+  { key: 'clarity', label: 'Понятно, что от меня ждут' },
+  { key: 'support', label: 'Хватает помощи наставника и коллег' },
+  { key: 'comfort', label: 'Комфортно в коллективе' },
+];
+const PULSE_WINDOW = 14; // сколько дней после контрольной точки опрос доступен
+
+/** opts.checklist — чек-лист первых дней отдела [{id, text}]. */
+export function computeMetrics(emp, today, { checklist = [] } = {}) {
   const end = endDate(emp, today);
   const tenureDays = Math.max(1, diffDays(emp.hireDate, end) + 1);
   const workdays = workdaysBetween(emp.hireDate, end);
@@ -69,7 +79,8 @@ export function computeMetrics(emp, today) {
     : closedWorkdays.length;
 
   const checkins = CHECKINS.map((c) => {
-    const done = emp.checkins?.[c.key] || null;
+    const d = emp.checkins?.[c.key];
+    const done = d && d <= end ? d : null; // встреча после даты расчёта ещё не случилась
     const due = tenureDays > c.day; // точка наступила
     const overdueBy = !done ? tenureDays - (c.day + CHECKIN_GRACE) : 0;
     return { ...c, done, due, overdue: !done && overdueBy > 0, overdueBy };
@@ -88,12 +99,28 @@ export function computeMetrics(emp, today) {
   }
   const checkedInToday = att ? att[today] || null : null;
 
+  const hasMentor = !!emp.mentor && (!emp.mentorSince || emp.mentorSince <= end);
+
+  // Опросы: последний отвеченный и тот, что ждёт ответа сейчас.
+  const pulses = PULSES.map((p) => {
+    const a = emp.pulse?.[p.key];
+    const answer = a && a.date <= end ? a : null;
+    return { ...p, answer, open: !answer && tenureDays > p.day && tenureDays <= p.day + PULSE_WINDOW };
+  });
+  const lastPulse = [...pulses].reverse().find((p) => p.answer) || null;
+  const pulseDue = emp.status === 'active' ? pulses.find((p) => p.open) || null : null;
+
+  // Чек-лист первых дней.
+  const checklistTotal = checklist.length;
+  const checklistDone = checklist.filter((c) => emp.onboarding?.[c.id] && emp.onboarding[c.id] <= end).length;
+
   return {
     end, tenureDays, workdaysCount: closedWorkdays.length, received, started, closed,
     overdue, overdueNotStarted, overdueStuck, closedLate,
     completion: received ? closed / received : null,
     idleStreak, idleTotal, activity, firstTask, workdaysWithoutFirstTask, checkins,
     hasAttendance: !!att, absentStreak, presentDays, checkedInToday,
+    hasMentor, pulses, lastPulse, pulseDue, checklistTotal, checklistDone,
   };
 }
 
@@ -101,7 +128,8 @@ export function computeMetrics(emp, today) {
  * Риск = сумма весов сработавших правил.
  * high >= 5, medium >= 2, иначе low. Возвращаем и причины, и то, что в порядке.
  */
-export function assessRisk(emp, today, m = computeMetrics(emp, today)) {
+export function assessRisk(emp, today, opts = {}) {
+  const m = computeMetrics(emp, today, opts);
   if (emp.status === 'left') return { level: 'left', score: 0, reasons: [], ok: [], metrics: m };
   if (m.tenureDays > ADAPTATION_DAYS) return { level: 'done', score: 0, reasons: [], ok: [], metrics: m };
 
@@ -115,7 +143,7 @@ export function assessRisk(emp, today, m = computeMetrics(emp, today)) {
     else if (m.absentStreak === 1) add(1, 'Вчера не отметился на работе');
   }
 
-  if (!emp.mentor) add(2, 'Наставник не назначен');
+  if (!m.hasMentor) add(2, 'Наставник не назначен');
   else ok.push(`Наставник: ${emp.mentor}`);
 
   for (const c of m.checkins) {
@@ -155,8 +183,43 @@ export function assessRisk(emp, today, m = computeMetrics(emp, today)) {
     add(2, `Завершено ${m.closed} из ${m.received} задач (${Math.round(m.completion * 100)}%)`);
   }
 
+  // Чек-лист первых дней проверяем с 3-го рабочего дня.
+  if (m.checklistTotal && m.workdaysCount >= 3) {
+    const missing = m.checklistTotal - m.checklistDone;
+    if (missing) {
+      add(missing * 2 >= m.checklistTotal ? 2 : 1, `Первые дни: не выполнено ${missing} из ${m.checklistTotal} пунктов чек-листа`,
+        'Пройтись по чек-листу первых дней: что не выдали, к чему нет доступа, с кем не познакомили.');
+    } else ok.push('Чек-лист первых дней выполнен');
+  }
+
+  // Опрос: оценка 1–2 по любому вопросу — повод поговорить.
+  if (m.lastPulse) {
+    const a = m.lastPulse.answer;
+    const low = PULSE_QUESTIONS.filter((q) => a[q.key] <= 2);
+    if (low.length) {
+      const q = low.sort((x, y) => a[x.key] - a[y.key])[0];
+      add(2, `Опрос ${m.lastPulse.day}-го дня: «${q.label}» — ${a[q.key]} из 5`,
+        `Обсудить ответ из опроса: «${q.label}» — ${a[q.key]} из 5${a.comment ? `, комментарий: «${a.comment}»` : ''}.`);
+    } else {
+      const avg = PULSE_QUESTIONS.reduce((s, q2) => s + a[q2.key], 0) / PULSE_QUESTIONS.length;
+      ok.push(`Опрос ${m.lastPulse.day}-го дня: средняя оценка ${avg.toFixed(1)} из 5`);
+    }
+  }
+
   const score = reasons.reduce((s, r) => s + r.points, 0);
   const level = score >= 5 ? 'high' : score >= 2 ? 'medium' : 'low';
   reasons.sort((a, b) => b.points - a.points);
   return { level, score, reasons, ok, metrics: m };
+}
+
+/**
+ * Динамика: как изменились баллы за неделю. Считаем те же правила на дату неделю назад.
+ * null — если неделю назад человек ещё не работал или уже не в адаптации.
+ */
+export function riskTrend(emp, today, opts = {}, now = assessRisk(emp, today, opts)) {
+  if (!(now.level in { high: 1, medium: 1, low: 1 })) return null;
+  const past = addDays(today, -7);
+  if (emp.hireDate > past) return null;
+  const prev = assessRisk(emp, past, opts);
+  return { prevScore: prev.score, prevLevel: prev.level, delta: now.score - prev.score };
 }

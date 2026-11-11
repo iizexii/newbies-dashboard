@@ -1,5 +1,5 @@
 // Общее состояние приложения и мелкие помощники для всех экранов.
-import { assessRisk } from './risk.js';
+import { assessRisk, riskTrend } from './risk.js';
 export { fmt } from './dates.js';
 
 export const ctx = {
@@ -37,15 +37,44 @@ export const plural = (n, one, few, many) => {
 
 export const manager = (id) => ctx.state.managers.find((m) => m.id === id);
 export const managerName = (id) => manager(id)?.name || '—';
+/** Автор действия: руководитель по id или HR. */
+export const personName = (id) => (id === 'hr' ? `${HR_NAME.split(',')[0]} (HR)` : managerName(id));
 export const deptName = (id) => ctx.state.departments.find((d) => d.id === id)?.name || '—';
 export const emp = (id) => ctx.state.employees.find((e) => e.id === id);
 
+export const checklistOf = (deptId) => ctx.state.departments.find((d) => d.id === deptId)?.checklist || [];
+
 let cache = new Map();
-export function resetCache() { cache = new Map(); }
+let trendCache = new Map();
+export function resetCache() { cache = new Map(); trendCache = new Map(); }
 export function assess(e) {
-  if (!cache.has(e.id)) cache.set(e.id, assessRisk(e, ctx.today));
+  if (!cache.has(e.id)) cache.set(e.id, assessRisk(e, ctx.today, { checklist: checklistOf(e.dept) }));
   return cache.get(e.id);
 }
+/** Изменение баллов за неделю: { delta, prevScore } или null. */
+export function trend(e) {
+  if (!trendCache.has(e.id)) trendCache.set(e.id, riskTrend(e, ctx.today, { checklist: checklistOf(e.dept) }, assess(e)));
+  return trendCache.get(e.id);
+}
+/** Стрелка динамики рядом с баллом риска. */
+export function trendMark(e) {
+  const t = trend(e);
+  if (!t || !t.delta) return '';
+  const up = t.delta > 0;
+  return `<span class="trend ${up ? 'up' : 'down'}" data-tip="Неделю назад: ${t.prevScore} ${plural(t.prevScore, 'балл', 'балла', 'баллов')}" tabindex="0">${up ? '▲' : '▼'}${Math.abs(t.delta)}</span>`;
+}
+
+/** Найти задачу сотрудника по id (в любом сотруднике). */
+export function findTask(id) {
+  for (const e of ctx.state.employees) {
+    const t = (e.tasks || []).find((x) => String(x.id) === String(id));
+    if (t) return { e, t };
+  }
+  return null;
+}
+
+/** Кнопка «?» с пояснением: текст виден по наведению и по фокусу с клавиатуры. */
+export const help = (text) => `<button type="button" class="q" data-tip="${esc(text)}" aria-label="Пояснение: ${esc(text)}">?</button>`;
 export const inAdaptation = (e) => e.status === 'active' && assess(e).metrics.tenureDays <= 90;
 export const newcomers = () => ctx.state.employees.filter(inAdaptation);
 

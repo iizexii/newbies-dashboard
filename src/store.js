@@ -47,6 +47,7 @@ export function keepDemoFresh(state, today) {
       t.created = sh(t.created); t.deadline = sh(t.deadline); t.started = sh(t.started); t.closed = sh(t.closed);
       for (const h of t.history || []) {
         h.at = sh(h.at);
+        h.closedWas = sh(h.closedWas);
         if (h.changes.deadline) { h.changes.deadline.from = sh(h.changes.deadline.from); h.changes.deadline.to = sh(h.changes.deadline.to); }
       }
     }

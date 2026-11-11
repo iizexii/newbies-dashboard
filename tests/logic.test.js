@@ -199,6 +199,24 @@ test('правка задачи пишет историю, повышает ве
   assert.equal(editTask(t, { title: 'Другое' }, 'm1', '2026-11-10'), null, 'завершённую задачу не правим');
 });
 
+test('возврат на доработку: задача снова в работе, комментарий в истории, сотрудник получает уведомление', async () => {
+  const { returnForRework, isRework, hasUnseenChanges, markSeen, editTask } = await import('../src/tasks.js');
+  const t = { title: 'Выкладка', description: 'По планограмме', created: '2026-11-02', deadline: '2026-11-05', started: '2026-11-03', closed: '2026-11-04', version: 1, history: [], seenVersion: 1 };
+  assert.equal(returnForRework(t, 'm3', TODAY, '  '), false, 'без комментария не возвращаем');
+  assert.ok(returnForRework(t, 'm3', TODAY, 'Ценники не на всех позициях', '2026-11-13'));
+  assert.equal(t.closed, null);
+  assert.equal(t.started, '2026-11-03');
+  assert.equal(t.deadline, '2026-11-13');
+  assert.ok(isRework(t) && hasUnseenChanges(t));
+  assert.equal(t.history[0].closedWas, '2026-11-04');
+  assert.equal(returnForRework(t, 'm3', TODAY, 'ещё раз'), false, 'открытую задачу вернуть нельзя');
+  markSeen(t);
+  editTask(t, { description: 'По планограмме, с ценниками' }, 'm3', TODAY);
+  assert.ok(!isRework(t), 'после следующей правки задача — просто «изменена»');
+  // открытая, срок 13.11 ещё не прошёл — не просрочка
+  assert.equal(computeMetrics(base({ tasks: [t] }), TODAY).overdue, 0);
+});
+
 test('новая задача — «новая», а не «изменена», даже если её успели поправить', async () => {
   const { editTask, isNewTask, hasUnseenChanges } = await import('../src/tasks.js');
   const t = { title: 'A', description: '', deadline: '2026-11-12', version: 1, history: [], seenVersion: 0 };

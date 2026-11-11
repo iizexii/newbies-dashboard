@@ -2,7 +2,7 @@
 // (новые и изменённые задачи, поручения, опросы, просрочки). В рабочей версии те же события
 // дублируются в Битрикс24 через im.notify.
 import { ctx, emp, manager, managerName, personName, newcomers, assess } from './ctx.js';
-import { isNewTask, hasUnseenChanges, lastChange, TASK_FIELDS } from './tasks.js';
+import { isNewTask, hasUnseenChanges, isRework, lastChange, TASK_FIELDS } from './tasks.js';
 import { PULSE_QUESTIONS } from './risk.js';
 import { addDays, workdaysBetween } from './dates.js';
 
@@ -31,9 +31,12 @@ export function notifications() {
     for (const t of e.tasks || []) {
       if (isNewTask(t)) {
         out.push({ kind: 'task', title: 'Новая задача', text: t.title, date: t.created, act: 'task-view', id: t.id });
+      } else if (hasUnseenChanges(t) && isRework(t)) {
+        const h = lastChange(t);
+        out.push({ kind: 'alert', title: 'Задачу вернули на доработку', text: `${t.title}: «${h.note}»`, date: h.at, who: personName(h.by), act: 'task-view', id: t.id });
       } else if (hasUnseenChanges(t)) {
         const h = lastChange(t);
-        const fields = [...new Set(t.history.filter((x) => x.v > t.seenVersion).flatMap((x) => Object.keys(x.changes)))].map((k) => TASK_FIELDS[k].toLowerCase());
+        const fields = [...new Set(t.history.filter((x) => x.v > t.seenVersion).flatMap((x) => (x.kind === 'rework' ? ['rework'] : Object.keys(x.changes))))].map((k) => (k === 'rework' ? 'возвращалась на доработку' : TASK_FIELDS[k].toLowerCase()));
         out.push({ kind: 'edit', title: 'Задача изменена', text: `${t.title} — изменено: ${fields.join(', ')}`, date: h.at, who: personName(h.by), act: 'task-view', id: t.id });
       }
     }

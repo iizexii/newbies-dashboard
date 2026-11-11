@@ -70,7 +70,7 @@ export function managerTeamTasks() {
   const unseen = rows.filter(({ t }) => hasUnseenChanges(t) || isNewTask(t)).length;
   return `
     <section class="toolbar">
-      <label class="check"><input type="checkbox" data-act="tt-done" ${showDone ? 'checked' : ''}> Показать завершённые</label>
+      <label class="check"><input type="checkbox" data-act="tt-done" ${showDone ? 'checked' : ''}> Показать завершённые</label>${help('Завершённую задачу можно вернуть на доработку с комментарием: она снова появится у сотрудника в «В работе».')}
       <span class="muted small">${rows.length} ${plural(rows.length, 'задача', 'задачи', 'задач')}${unseen ? ` · ${unseen} сотрудники ещё не открывали после постановки или изменения` : ''}</span>
       <span class="grow"></span>
       ${team.length ? `<button class="primary" data-act="give-task">${icon('plus')} Поставить задачу</button>` : ''}
@@ -83,7 +83,7 @@ export function managerTeamTasks() {
         <td class="nowrap ${!t.closed && t.deadline < ctx.today ? 'red' : ''}">${fmt(t.deadline)}</td>
         <td>${statusChip(t)}</td>
         <td>${changeMark(t, false)}</td>
-        <td class="row-actions">${!t.closed ? `<button class="small" data-act="task-edit" data-id="${t.id}">${icon('edit')} Изменить</button>` : ''}</td>
+        <td class="row-actions">${!t.closed ? `<button class="small" data-act="task-edit" data-id="${t.id}">${icon('edit')} Изменить</button>` : `<button class="small" data-act="task-rework" data-id="${t.id}">${icon('history')} На доработку</button>`}</td>
       </tr>`).join('')}</tbody>
     </table></div>` : '<div class="empty">Открытых задач у новичков нет.</div>'}`;
 }
@@ -223,8 +223,8 @@ export function employeeTasks() {
     <div class="kanban">
       ${col('Новые', fresh, (t) => `<button class="small" data-act="t-start" data-id="${t.id}">Начать</button>`, 'Новых задач нет.',
         nFresh ? `<p class="ti-hint">У ${nFresh} ${plural(nFresh, 'задачи', 'задач', 'задач')} срок уже прошёл. Непонятно, с чего начать или что от вас ждут? Скажите руководителю — это нормально.</p>` : '')}
-      ${col('В работе', inWork, (t) => `<button class="primary small" data-act="t-done" data-id="${t.id}">Завершить</button>`, 'Ничего не в работе.',
+      ${col('В работе', inWork, (t) => `<button class="primary small" data-act="t-done" data-id="${t.id}">Завершить</button><button class="small" data-act="t-pause" data-id="${t.id}" data-tip="Приостановить: задача вернётся в «Новые»" aria-label="Приостановить">⏸</button>`, 'Ничего не в работе.',
         nStuck ? `<p class="ti-hint">${nStuck} ${plural(nStuck, 'задача застряла', 'задачи застряли', 'задач застряли')} после срока. Если не получается — спросите наставника, вместе быстрее.</p>` : '')}
-      ${col('Завершено', done, (t) => (t.closed === ctx.today ? `<button class="link" data-act="t-undo" data-id="${t.id}">вернуть</button>` : ''), 'Пока ничего.')}
+      ${col('Завершено', done, (t) => `<button class="small" data-act="t-undo" data-id="${t.id}" data-tip="Возобновить: задача вернётся в «В работе»">Вернуть</button>`, 'Пока ничего.')}
     </div>`;
 }

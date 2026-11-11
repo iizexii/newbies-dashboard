@@ -1,12 +1,13 @@
 // Задача сотрудника: просмотр (текущая версия первой, что изменилось, история), правка, постановка.
 import { ctx, esc, fmt, plural, personName as managerName } from '../ctx.js';
-import { TASK_FIELDS, isNewTask, hasUnseenChanges, changesSince, versionSnapshot, lastChange } from '../tasks.js';
+import { TASK_FIELDS, isNewTask, hasUnseenChanges, isRework, changesSince, versionSnapshot, lastChange } from '../tasks.js';
 import { diffDays, nextWorkday } from '../dates.js';
 import { icon } from '../icons.js';
 
 /** Статус задачи коротко — для списков. */
 export function statusChip(t, today = ctx.today) {
   if (t.closed) return t.closed > t.deadline ? '<span class="chip amber">завершена с опозданием</span>' : '<span class="chip green">завершена</span>';
+  if (isRework(t)) return `<span class="chip orange strong">на доработке${t.deadline < today ? ', срок прошёл' : ''}</span>`;
   if (t.deadline < today) return `<span class="chip red">${t.started ? 'застряла' : 'не начата'}, срок прошёл</span>`;
   return t.started ? '<span class="chip blue">в работе</span>' : '<span class="chip">новая</span>';
 }
@@ -15,12 +16,13 @@ export function statusChip(t, today = ctx.today) {
 export function changeMark(t, forEmployee) {
   if (forEmployee) {
     if (isNewTask(t)) return '<span class="chip blue strong">Новая</span>';
+    if (hasUnseenChanges(t) && isRework(t)) return `<span class="chip orange strong">${icon('history')} Вернули на доработку</span>`;
     if (hasUnseenChanges(t)) return `<span class="chip orange strong">${icon('edit')} Изменена ${fmt(lastChange(t).at).slice(0, 5)}</span>`;
     if (t.history?.length) return `<span class="chip">изменена ${fmt(lastChange(t).at).slice(0, 5)}</span>`;
     return '';
   }
   if (isNewTask(t)) return '<span class="chip" data-tip="Сотрудник ещё не открывал задачу" tabindex="0">не открыта</span>';
-  if (hasUnseenChanges(t)) return '<span class="chip orange" data-tip="Сотрудник ещё не открывал задачу после последнего изменения" tabindex="0">изменения не видел</span>';
+  if (hasUnseenChanges(t)) return `<span class="chip orange" data-tip="Сотрудник ещё не открывал задачу после последнего ${isRework(t) ? 'возврата' : 'изменения'}" tabindex="0">${isRework(t) ? 'возврат не видел' : 'изменения не видел'}</span>`;
   if (t.history?.length) return `<span class="chip" data-tip="Изменений: ${t.history.length}. Сотрудник видел текущую версию" tabindex="0">изм. ${t.history.length}</span>`;
   return '';
 }
@@ -46,13 +48,20 @@ export function taskView(e, t, { forEmployee, seenFrom }) {
   const h = lastChange(t);
   const history = [...(t.history || [])].reverse();
   const actions = forEmployee
-    ? (t.closed ? (t.closed === today ? `<button data-act="t-undo" data-id="${t.id}">Вернуть в работу</button>` : '')
-      : t.started ? `<button class="primary" data-act="t-done" data-id="${t.id}">Завершить</button>`
+    ? (t.closed ? `<button data-act="t-undo" data-id="${t.id}">Вернуть в работу</button>`
+      : t.started ? `<button data-act="t-pause" data-id="${t.id}">Приостановить</button><button class="primary" data-act="t-done" data-id="${t.id}">Завершить</button>`
         : `<button class="primary" data-act="t-start" data-id="${t.id}">Начать выполнение</button>`)
-    : (!t.closed ? `<button class="primary" data-act="task-edit" data-id="${t.id}">${icon('edit')} Изменить задачу</button>` : '');
+    : (!t.closed ? `<button class="primary" data-act="task-edit" data-id="${t.id}">${icon('edit')} Изменить задачу</button>`
+      : `<button class="primary" data-act="task-rework" data-id="${t.id}">${icon('history')} Вернуть на доработку</button>`);
 
   return `
-    ${since && Object.keys(since).length ? `<section class="callout orange">
+    ${isRework(t) ? `<section class="callout red">
+      <div class="callout-h">${icon('history')} Возвращена на доработку</div>
+      <p class="muted small">${esc(managerName(h.by))} · ${fmt(h.at)} · была завершена ${fmt(h.closedWas)}</p>
+      <div class="rework-note">«${esc(h.note)}»</div>
+      ${since && Object.keys(since).length ? diffBlock(since) : h.changes.deadline ? diffBlock(h.changes) : ''}
+    </section>` : ''}
+    ${!isRework(t) && since && Object.keys(since).length ? `<section class="callout orange">
       <div class="callout-h">${icon('bell')} Задача изменилась с прошлого просмотра</div>
       <p class="muted small">${esc(managerName(h.by))} · ${fmt(h.at)}${h.note ? ` · «${esc(h.note)}»` : ''}</p>
       ${diffBlock(since)}
@@ -70,8 +79,8 @@ export function taskView(e, t, { forEmployee, seenFrom }) {
     <details class="hist">
       <summary>${icon('history')} История изменений · ${(t.history?.length || 0) + 1} ${plural((t.history?.length || 0) + 1, 'версия', 'версии', 'версий')}</summary>
       <ol class="hist-list">
-        ${history.map((x) => `<li><div class="hist-h"><b>Версия ${x.v}</b> · ${fmt(x.at)} · ${esc(managerName(x.by))}${x.v === (t.version || 1) ? ' <span class="chip blue">текущая</span>' : ''}</div>
-          ${x.note ? `<div class="muted small">Причина: «${esc(x.note)}»</div>` : ''}${diffBlock(x.changes)}</li>`).join('')}
+        ${history.map((x) => `<li class="${x.kind === 'rework' ? 'rw' : ''}"><div class="hist-h"><b>Версия ${x.v}</b> · ${fmt(x.at)} · ${esc(managerName(x.by))}${x.kind === 'rework' ? ` — возвращена на доработку (была завершена ${fmt(x.closedWas)})` : ''}${x.v === (t.version || 1) ? ' <span class="chip blue">текущая</span>' : ''}</div>
+          ${x.note ? `<div class="muted small">${x.kind === 'rework' ? 'Комментарий' : 'Причина'}: «${esc(x.note)}»</div>` : ''}${diffBlock(x.changes)}</li>`).join('')}
         <li><div class="hist-h"><b>Версия 1</b> · ${fmt(t.created)} · ${esc(managerName(t.by))} — задача поставлена${t.history?.length ? '' : ' <span class="chip blue">текущая</span>'}</div>
           ${t.history?.length ? (() => { const s = versionSnapshot(t, 1); return `<div class="small muted">Название: ${esc(s.title)} · срок ${fmt(s.deadline)}</div>`; })() : ''}</li>
       </ol>
@@ -100,5 +109,17 @@ export function giveTaskForm(e, team) {
     <label>Крайний срок<input type="date" name="deadline" required min="${ctx.today}" value="${nextWorkday(nextWorkday(ctx.today))}"></label>
     <p class="note">Задача появится у сотрудника с отметкой «Новая». В рабочей версии — в Битрикс24 (<code>tasks.task.add</code>).</p>
     <p class="form-err red" hidden></p><div class="m-foot"><button type="button" data-act="modal-close">Отмена</button><button class="primary">Поставить задачу</button></div>
+  </form>`;
+}
+
+export function reworkForm(e, t) {
+  const today = ctx.today;
+  const suggested = t.deadline > today ? t.deadline : nextWorkday(nextWorkday(today));
+  return `<form data-form="task-rework" data-id="${t.id}">
+    <p><b>${esc(t.title)}</b><br><span class="muted small">${esc(e.name)} · завершена ${fmt(t.closed)}</span></p>
+    <label>Что нужно доработать (увидит сотрудник)<textarea name="comment" rows="4" required maxlength="500" placeholder="Например: ценники стоят не на всех позициях в отделе Б3 — проверьте и сфотографируйте результат"></textarea></label>
+    <label>Новый срок<input type="date" name="deadline" required min="${today}" value="${suggested}"></label>
+    <p class="note">Задача вернётся к сотруднику в «В работе» с пометкой «Вернули на доработку» и вашим комментарием. В рабочей версии — <code>tasks.task.disapprove</code> в Битрикс24.</p>
+    <p class="form-err red" hidden></p><div class="m-foot"><button type="button" data-act="modal-close">Отмена</button><button class="primary">Вернуть на доработку</button></div>
   </form>`;
 }

@@ -2,13 +2,13 @@ import { todayISO, nextWorkday, diffDays } from './dates.js';
 import { LEAVE_REASONS, DEFAULT_CHECKLIST } from './data.js';
 import { loadState, saveState, resetState } from './store.js';
 import { ctx, HR_NAME, esc, fmt, uid, plural, assess, resetCache, manager, managerName, deptName, emp, newcomers, findTask } from './ctx.js';
-import { editTask, markSeen, isNewTask, hasUnseenChanges } from './tasks.js';
+import { editTask, returnForRework, markSeen, isNewTask, hasUnseenChanges } from './tasks.js';
 import { notifications, markAllRead } from './notify.js';
 import { icon } from './icons.js';
 import * as hr from './views/hr.js';
 import { drawer } from './views/card.js';
 import * as people from './views/people.js';
-import { taskView, editTaskForm, giveTaskForm } from './views/task.js';
+import { taskView, editTaskForm, giveTaskForm, reworkForm } from './views/task.js';
 import { admin } from './views/admin.js';
 
 ctx.today = todayISO();
@@ -399,6 +399,7 @@ document.addEventListener('click', (ev) => {
     case 'task': taskModal(emp(id)); break;
     case 'task-view': taskViewModal(id); break;
     case 'task-edit': editTaskModal(id); break;
+    case 'task-rework': { const { e, t } = findTask(id); openModal(`На доработку: ${e.name}`, reworkForm(e, t), { wide: true }); break; }
     case 'leave': leaveModal(emp(id)); break;
     case 'unleave': { const e = emp(id); Object.assign(e, { status: 'active', leftDate: null, leftReason: null }); commit('Сотрудник снова в работающих'); break; }
     case 'del-emp': confirmModal('Удалить сотрудника?', `«${esc(emp(id).name)}» будет удалён вместе с историей. Если человек уволился, лучше «Отметить увольнение» в карточке: тогда он останется в аналитике.`, 'del-emp-yes', id); break;
@@ -422,7 +423,8 @@ document.addEventListener('click', (ev) => {
     case 'checkout-undo': { const e = emp(ui.asEmployee); delete e.attendance[ctx.today]; commit(); break; }
     case 't-start': { const t = myTask(id); t.started = ctx.today; markSeen(t); if (modalRoot.innerHTML) closeModal(); commit('Задача в работе'); break; }
     case 't-done': { const t = myTask(id); t.started = t.started || ctx.today; t.closed = ctx.today; markSeen(t); if (modalRoot.innerHTML) closeModal(); commit('Задача завершена'); break; }
-    case 't-undo': { const t = myTask(id); t.closed = null; if (modalRoot.innerHTML) closeModal(); commit(); break; }
+    case 't-undo': { const t = myTask(id); t.closed = null; t.started = t.started || ctx.today; if (modalRoot.innerHTML) closeModal(); commit(t.deadline < ctx.today ? 'Задача снова в работе. Срок уже прошёл — её видно как просроченную' : 'Задача снова в работе'); break; }
+    case 't-pause': { const t = myTask(id); t.started = null; if (modalRoot.innerHTML) closeModal(); commit('Задача приостановлена — снова в «Новых»'); break; }
     case 'add-mgr': mgrModal(null); break;
     case 'edit-mgr': mgrModal(manager(id)); break;
     case 'del-mgr': mgrDeleteModal(manager(id)); break;
@@ -571,6 +573,13 @@ document.addEventListener('submit', (ev) => {
       const changed = editTask(t, { title: fd.title, description: fd.description, deadline: fd.deadline }, ui.role === 'manager' ? ui.asManager : 'hr', ctx.today, fd.note || '');
       if (!changed) { formError(form, 'Ничего не изменилось'); return; }
       closeModal(); commit(`Задача изменена (версия ${t.version}). ${e.name.split(' ')[1] || e.name} получит уведомление`); break;
+    }
+    case 'task-rework': {
+      const { e, t } = findTask(id);
+      if (!fd.comment.trim()) { formError(form, 'Напишите, что нужно доработать'); return; }
+      if (fd.deadline < ctx.today) { formError(form, 'Новый срок не может быть в прошлом'); return; }
+      returnForRework(t, ui.role === 'manager' ? ui.asManager : 'hr', ctx.today, fd.comment, fd.deadline);
+      closeModal(); commit(`Задача возвращена на доработку. ${e.name.split(' ')[1] || e.name} получит уведомление`); break;
     }
     case 'pulse': {
       const e = emp(id);

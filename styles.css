@@ -399,3 +399,5 @@ pre { background: var(--soft); padding: 8px; border-radius: 6px; font-size: 11.5
   .m-foot .note { flex-basis: 100%; }
   .diff { grid-template-columns: 1fr; gap: 2px; }
 }
+.rework-note { background: #fff; border-radius: 6px; padding: 8px 10px; margin: 6px 0; white-space: pre-wrap; }
+.hist-list li.rw::before { background: var(--orange); }

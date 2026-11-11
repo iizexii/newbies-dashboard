@@ -26,6 +26,25 @@ export function editTask(t, patch, by, at, note = '') {
   return changes;
 }
 
+/**
+ * Вернуть завершённую задачу на доработку: задача снова «в работе», комментарий постановщика
+ * сохраняется в истории как отдельная версия, срок можно продлить. Сотрудник получит уведомление.
+ */
+export function returnForRework(t, by, at, comment, deadline = t.deadline) {
+  if (!t.closed || !comment.trim()) return false;
+  const v = (t.version || 1) + 1;
+  const changes = deadline && deadline !== t.deadline ? { deadline: { from: t.deadline, to: deadline } } : {};
+  t.history = [...(t.history || []), { v, at, by, kind: 'rework', note: comment.trim(), closedWas: t.closed, changes }];
+  if (changes.deadline) t.deadline = deadline;
+  t.closed = null;
+  t.started = t.started || at;
+  t.version = v;
+  return true;
+}
+
+/** Задача сейчас на доработке: последняя версия — возврат постановщиком. */
+export const isRework = (t) => !t.closed && lastChange(t)?.kind === 'rework';
+
 /** Новая задача, которую сотрудник ещё не открывал. */
 export const isNewTask = (t) => !t.closed && t.seenVersion === 0;
 

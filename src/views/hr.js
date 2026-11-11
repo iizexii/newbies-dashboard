@@ -225,13 +225,13 @@ export function analytics() {
 export function actionsPage() {
   const list = [...ctx.state.actions].sort((a, b) => (a.status === b.status ? (a.created < b.created ? 1 : -1) : a.status === 'open' ? -1 : 1));
   return `
-    <div class="banner">Задачи создаются в демо локально. Под каждой — запрос <code>tasks.task.add</code>, который ушёл бы в REST API Битрикс24.</div>
+    <div class="banner">В демо задачи хранятся в браузере. В рабочей версии каждая появится у руководителя в Битрикс24.</div>
     ${list.length ? `<div class="table-wrap"><table class="list"><thead><tr><th>Задача</th><th>Новичок</th><th>Ответственный</th><th>Срок</th><th>Статус</th></tr></thead><tbody>
       ${list.map((x) => {
         const e = emp(x.employeeId);
         const late = x.status === 'open' && x.deadline < ctx.today;
         return `<tr class="${x.status}">
-          <td><b>${esc(x.title)}</b><details><summary>запрос в Битрикс24</summary><pre>${esc(JSON.stringify(b24Payload(x), null, 2))}</pre></details></td>
+          <td><b>${esc(x.title)}</b></td>
           <td>${e ? `<button class="link" data-act="open" data-id="${e.id}">${esc(e.name)}</button>` : '<span class="muted">удалён</span>'}</td>
           <td>${esc(managerName(x.responsibleId))}</td>
           <td class="nowrap ${late ? 'red' : ''}">${fmt(x.deadline)}${late ? ` · просрочено на ${overdueWorkdays(x, ctx.today) || 'менее 1'} раб. дн.` : ''}${isEscalated(x, ctx.today) ? `<div>${x.remindedAt === ctx.today ? '<span class="muted small">напоминание отправлено</span>' : `<button class="small" data-act="remind" data-id="${x.id}">Напомнить</button>`}</div>` : ''}</td>
@@ -241,7 +241,3 @@ export function actionsPage() {
     </tbody></table></div>` : '<div class="empty">Пока нет задач. Откройте новичка с высоким риском и нажмите «Поручить руководителю».</div>'}`;
 }
 
-export function b24Payload(x) {
-  const m = ctx.state.managers.find((mm) => mm.id === x.responsibleId);
-  return { method: 'tasks.task.add', params: { fields: { TITLE: x.title, DESCRIPTION: x.description, RESPONSIBLE_ID: m?.b24Id ?? null, DEADLINE: `${x.deadline}T18:00:00+03:00`, TAGS: ['новичок', 'адаптация'] } } };
-}

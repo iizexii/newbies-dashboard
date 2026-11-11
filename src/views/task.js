@@ -94,7 +94,7 @@ export function taskView(e, t, { forEmployee, seenFrom }) {
           ${t.history?.length ? snapDetails(t, 1, 'Показать версию 1 целиком') : ''}</li>
       </ol>
     </details>
-    <div class="m-foot">${forEmployee ? '' : `<span class="note grow">В рабочей версии изменения уходят в Б24 (<code>tasks.task.update</code>), сотрудник получает уведомление.</span>`}<button type="button" data-act="modal-close">Закрыть</button>${actions}</div>`;
+    <div class="m-foot">${forEmployee ? '' : `<span class="note grow">В рабочей версии изменения сохраняются в Битрикс24, сотрудник получает уведомление.</span>`}<button type="button" data-act="modal-close">Закрыть</button>${actions}</div>`;
 }
 
 export function editTaskForm(e, t) {
@@ -116,7 +116,7 @@ export function giveTaskForm(e, team) {
     <label>Название<input name="title" required maxlength="120" placeholder="Например: инструктаж по складской программе"></label>
     <label>Что нужно сделать<textarea name="description" rows="5" required placeholder="Шаги и ожидаемый результат. Новичку должно быть понятно без вопросов: что сделать, где, у кого спросить и как понять, что готово."></textarea></label>
     <label>Крайний срок<input type="date" name="deadline" required min="${ctx.today}" value="${nextWorkday(nextWorkday(ctx.today))}"></label>
-    <p class="note">Задача появится у сотрудника с отметкой «Новая». В рабочей версии — в Битрикс24 (<code>tasks.task.add</code>).</p>
+    <p class="note">Задача появится у сотрудника с отметкой «Новая», в рабочей версии — и в Битрикс24.</p>
     <p class="form-err red" hidden></p><div class="m-foot"><button type="button" data-act="modal-close">Отмена</button><button class="primary">Поставить задачу</button></div>
   </form>`;
 }
@@ -129,7 +129,7 @@ export function reworkForm(e, t) {
     <label>Что нужно доработать (увидит сотрудник)<textarea name="comment" rows="4" required maxlength="500" placeholder="Например: ценники стоят не на всех позициях в отделе Б3 — проверьте и сфотографируйте результат"></textarea></label>
     <label>Новый срок<input type="date" name="deadline" required min="${today}" value="${suggested}"></label>
     <label class="check inline"><input type="checkbox" name="addDesc" checked> Дописать комментарий в описание задачи (сданный текст останется в истории)</label>
-    <p class="note">Задача вернётся к сотруднику в «В работе» с пометкой «Вернули на доработку» и вашим комментарием. В рабочей версии — <code>tasks.task.disapprove</code> в Битрикс24.</p>
+    <p class="note">Задача вернётся к сотруднику в «В работе» с пометкой «Вернули на доработку» и вашим комментарием. В рабочей версии задача вернётся и в Битрикс24.</p>
     <p class="form-err red" hidden></p><div class="m-foot"><button type="button" data-act="modal-close">Отмена</button><button class="primary">Вернуть на доработку</button></div>
   </form>`;
 }

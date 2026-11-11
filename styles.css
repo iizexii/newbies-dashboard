@@ -401,3 +401,9 @@ pre { background: var(--soft); padding: 8px; border-radius: 6px; font-size: 11.5
 }
 .rework-note { background: #fff; border-radius: 6px; padding: 8px 10px; margin: 6px 0; white-space: pre-wrap; }
 .hist-list li.rw::before { background: var(--orange); }
+.snap { margin-top: 6px; }
+.snap summary { color: var(--link); }
+.snap-box { margin-top: 6px; padding: 10px 12px; background: var(--soft); border-radius: 8px; border: 1px dashed #c6cdd3; }
+.snap-box .tdesc { margin-top: 6px; background: #fff; }
+.modal label.check.inline { flex-direction: row; color: var(--ink); font-size: 13px; }
+.callout.red { color: var(--ink); }

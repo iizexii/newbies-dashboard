@@ -30,12 +30,18 @@ export function editTask(t, patch, by, at, note = '') {
  * Вернуть завершённую задачу на доработку: задача снова «в работе», комментарий постановщика
  * сохраняется в истории как отдельная версия, срок можно продлить. Сотрудник получит уведомление.
  */
-export function returnForRework(t, by, at, comment, deadline = t.deadline) {
+export function returnForRework(t, by, at, comment, deadline = t.deadline, { addToDescription = true } = {}) {
   if (!t.closed || !comment.trim()) return false;
   const v = (t.version || 1) + 1;
   const changes = deadline && deadline !== t.deadline ? { deadline: { from: t.deadline, to: deadline } } : {};
+  // комментарий дописываем в описание, чтобы он остался в самой задаче, а прежний текст — в истории
+  if (addToDescription) {
+    const from = t.description || '';
+    changes.description = { from, to: `${from}${from ? '\n\n' : ''}Доработка ${at.split('-').reverse().join('.')}: ${comment.trim()}` };
+  }
   t.history = [...(t.history || []), { v, at, by, kind: 'rework', note: comment.trim(), closedWas: t.closed, changes }];
   if (changes.deadline) t.deadline = deadline;
+  if (changes.description) t.description = changes.description.to;
   t.closed = null;
   t.started = t.started || at;
   t.version = v;

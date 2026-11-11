@@ -209,6 +209,10 @@ test('возврат на доработку: задача снова в раб�
   assert.equal(t.deadline, '2026-11-13');
   assert.ok(isRework(t) && hasUnseenChanges(t));
   assert.equal(t.history[0].closedWas, '2026-11-04');
+  // комментарий дописан в описание, а сданная версия восстанавливается из истории
+  assert.equal(t.description, 'По планограмме\n\nДоработка 11.11.2026: Ценники не на всех позициях');
+  const { versionSnapshot } = await import('../src/tasks.js');
+  assert.deepEqual(versionSnapshot(t, 1), { title: 'Выкладка', description: 'По планограмме', deadline: '2026-11-05' });
   assert.equal(returnForRework(t, 'm3', TODAY, 'ещё раз'), false, 'открытую задачу вернуть нельзя');
   markSeen(t);
   editTask(t, { description: 'По планограмме, с ценниками' }, 'm3', TODAY);

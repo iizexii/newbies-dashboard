@@ -578,7 +578,7 @@ document.addEventListener('submit', (ev) => {
       const { e, t } = findTask(id);
       if (!fd.comment.trim()) { formError(form, 'Напишите, что нужно доработать'); return; }
       if (fd.deadline < ctx.today) { formError(form, 'Новый срок не может быть в прошлом'); return; }
-      returnForRework(t, ui.role === 'manager' ? ui.asManager : 'hr', ctx.today, fd.comment, fd.deadline);
+      returnForRework(t, ui.role === 'manager' ? ui.asManager : 'hr', ctx.today, fd.comment, fd.deadline, { addToDescription: fd.addDesc === 'on' });
       closeModal(); commit(`Задача возвращена на доработку. ${e.name.split(' ')[1] || e.name} получит уведомление`); break;
     }
     case 'pulse': {

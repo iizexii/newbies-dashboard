@@ -31,11 +31,17 @@ const fieldValue = (k, v) => (k === 'deadline' ? fmt(v) : esc(v || '—'));
 
 function diffBlock(changes) {
   return Object.entries(changes).map(([k, c]) => k === 'description' && c.from && c.to.startsWith(c.from)
-    ? `<div class="diff"><span class="diff-k">${TASK_FIELDS[k]}</span><div><span class="muted small">дописано:</span><div class="diff-new"><ins>${esc(c.to.slice(c.from.length).trim())}</ins></div></div></div>`
+    ? `<div class="diff"><span class="diff-k">${TASK_FIELDS[k]}</span><div><span class="muted small">дописано:</span><div class="diff-new"><ins>${esc(c.to.slice(c.from.length).trim())}</ins></div><details><summary>как было полностью</summary><div class="diff-old">${esc(c.from)}</div></details></div></div>`
     : k === 'description'
     ? `<div class="diff"><span class="diff-k">${TASK_FIELDS[k]}</span><div><div class="diff-new">${esc(c.to)}</div><details><summary>как было</summary><div class="diff-old">${esc(c.from || '—')}</div></details></div></div>`
     : `<div class="diff"><span class="diff-k">${TASK_FIELDS[k]}</span><div><s class="diff-old">${fieldValue(k, c.from)}</s> → <b class="diff-new">${fieldValue(k, c.to)}</b></div></div>`).join('');
 }
+
+/** Версия задачи целиком: название, срок, полное описание. */
+function snapBox(s) {
+  return `<div class="snap-box"><div><b>${esc(s.title)}</b> <span class="muted">· срок ${fmt(s.deadline)}</span></div><div class="tdesc">${s.description ? esc(s.description) : '<span class="muted">Описания нет.</span>'}</div></div>`;
+}
+const snapDetails = (t, v, label) => `<details class="snap"><summary>${label}</summary>${snapBox(versionSnapshot(t, v))}</details>`;
 
 /**
  * Карточка задачи. seenFrom — версия, которую сотрудник видел до открытия
@@ -59,7 +65,8 @@ export function taskView(e, t, { forEmployee, seenFrom }) {
       <div class="callout-h">${icon('history')} Возвращена на доработку</div>
       <p class="muted small">${esc(managerName(h.by))} · ${fmt(h.at)} · была завершена ${fmt(h.closedWas)}</p>
       <div class="rework-note">«${esc(h.note)}»</div>
-      ${since && Object.keys(since).length ? diffBlock(since) : h.changes.deadline ? diffBlock(h.changes) : ''}
+      ${(() => { const c = { ...(since && Object.keys(since).length ? since : h.changes) }; if (c.description && c.description.to.endsWith(h.note)) delete c.description; return diffBlock(c); })()}
+      ${snapDetails(t, h.v - 1, `${icon('tasks')} Что было в задаче на момент сдачи ${fmt(h.closedWas)}`)}
     </section>` : ''}
     ${!isRework(t) && since && Object.keys(since).length ? `<section class="callout orange">
       <div class="callout-h">${icon('bell')} Задача изменилась с прошлого просмотра</div>
@@ -80,9 +87,11 @@ export function taskView(e, t, { forEmployee, seenFrom }) {
       <summary>${icon('history')} История изменений · ${(t.history?.length || 0) + 1} ${plural((t.history?.length || 0) + 1, 'версия', 'версии', 'версий')}</summary>
       <ol class="hist-list">
         ${history.map((x) => `<li class="${x.kind === 'rework' ? 'rw' : ''}"><div class="hist-h"><b>Версия ${x.v}</b> · ${fmt(x.at)} · ${esc(managerName(x.by))}${x.kind === 'rework' ? ` — возвращена на доработку (была завершена ${fmt(x.closedWas)})` : ''}${x.v === (t.version || 1) ? ' <span class="chip blue">текущая</span>' : ''}</div>
-          ${x.note ? `<div class="muted small">${x.kind === 'rework' ? 'Комментарий' : 'Причина'}: «${esc(x.note)}»</div>` : ''}${diffBlock(x.changes)}</li>`).join('')}
+          ${x.note ? `<div class="muted small">${x.kind === 'rework' ? 'Комментарий' : 'Причина'}: «${esc(x.note)}»</div>` : ''}${diffBlock(x.changes)}
+          ${x.kind === 'rework' ? snapDetails(t, x.v - 1, `Что было сдано ${fmt(x.closedWas)} (версия ${x.v - 1})`) : ''}
+          ${x.v !== (t.version || 1) ? snapDetails(t, x.v, `Показать версию ${x.v} целиком`) : ''}</li>`).join('')}
         <li><div class="hist-h"><b>Версия 1</b> · ${fmt(t.created)} · ${esc(managerName(t.by))} — задача поставлена${t.history?.length ? '' : ' <span class="chip blue">текущая</span>'}</div>
-          ${t.history?.length ? (() => { const s = versionSnapshot(t, 1); return `<div class="small muted">Название: ${esc(s.title)} · срок ${fmt(s.deadline)}</div>`; })() : ''}</li>
+          ${t.history?.length ? snapDetails(t, 1, 'Показать версию 1 целиком') : ''}</li>
       </ol>
     </details>
     <div class="m-foot">${forEmployee ? '' : `<span class="note grow">В рабочей версии изменения уходят в Б24 (<code>tasks.task.update</code>), сотрудник получает уведомление.</span>`}<button type="button" data-act="modal-close">Закрыть</button>${actions}</div>`;
@@ -119,6 +128,7 @@ export function reworkForm(e, t) {
     <p><b>${esc(t.title)}</b><br><span class="muted small">${esc(e.name)} · завершена ${fmt(t.closed)}</span></p>
     <label>Что нужно доработать (увидит сотрудник)<textarea name="comment" rows="4" required maxlength="500" placeholder="Например: ценники стоят не на всех позициях в отделе Б3 — проверьте и сфотографируйте результат"></textarea></label>
     <label>Новый срок<input type="date" name="deadline" required min="${today}" value="${suggested}"></label>
+    <label class="check inline"><input type="checkbox" name="addDesc" checked> Дописать комментарий в описание задачи (сданный текст останется в истории)</label>
     <p class="note">Задача вернётся к сотруднику в «В работе» с пометкой «Вернули на доработку» и вашим комментарием. В рабочей версии — <code>tasks.task.disapprove</code> в Битрикс24.</p>
     <p class="form-err red" hidden></p><div class="m-foot"><button type="button" data-act="modal-close">Отмена</button><button class="primary">Вернуть на доработку</button></div>
   </form>`;

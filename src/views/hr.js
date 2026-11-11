@@ -34,13 +34,13 @@ export function overview() {
   <section class="kpis">
     ${kpi(list.length, 'новичков сейчас', `работают меньше 90 дней${worse ? ` · у ${worse} риск вырос за неделю` : ''}`, '', 'data-act="goto-newbies" data-risk="all"')}
     ${kpi(by('high').length, 'с высоким риском', 'нужно действие сегодня', 'red', 'data-act="goto-newbies" data-risk="high"')}
-    ${kpi(by('medium').length, 'требуют внимания', '1–2 тревожных сигнала', 'amber', 'data-act="goto-newbies" data-risk="medium"')}
+    ${kpi(by('medium').length, 'требуют внимания', '1-2 тревожных сигнала', 'amber', 'data-act="goto-newbies" data-risk="medium"')}
     ${kpi(pct(A.earlyShareOfLeavers), 'из уволившихся не доработали 90 дней', `${A.earlyLeavers} из ${A.leavers} за 12 мес.`, '', 'data-act="page" data-p="analytics"')}
   </section>
 
   <div class="grid2">
     <section class="card">
-      <h3>Кому нужно внимание сегодня ${help("Новички с высоким риском, самые тревожные сверху. Клик — карточка с причинами.")}</h3>
+      <h3>Кому нужно внимание сегодня ${help("Новички с высоким риском, самые тревожные сверху. Клик - карточка с причинами.")}</h3>
       ${urgent.length ? `<ul class="urgent">${urgent.map((e) => {
         const a = assess(e);
         return `<li data-act="open" data-id="${e.id}">
@@ -52,7 +52,7 @@ export function overview() {
     </section>
 
     <section class="card">
-      <h3>Риск по отделам ${help("Сколько новичков в каждом отделе и в каком они состоянии. Клик по строке — список отдела.")}</h3>
+      <h3>Риск по отделам ${help("Сколько новичков в каждом отделе и в каком они состоянии. Клик по строке - список отдела.")}</h3>
       ${stackedBars(riskRows, RISK_COLORS, { act: 'goto-dept' })}
     </section>
 
@@ -78,7 +78,7 @@ export function overview() {
   </div>`;
 }
 
-/** Строка эскалации: кто, что, на сколько просрочено, кнопка «Напомнить». */
+/** Строка эскалации: кто, что, на сколько просрочено, кнопка "Напомнить". */
 export function escRow(x) {
   const n = overdueWorkdays(x, ctx.today);
   return `<div class="esc-row"><div><b>${esc(managerName(x.responsibleId))}</b> · ${esc(x.title)}<div class="muted small">срок был ${fmt(x.deadline)}, просрочено на ${n} раб. дн.${x.remindedAt ? ` · напомнили ${fmt(x.remindedAt)}` : ''}</div></div>${x.remindedAt === ctx.today ? '<span class="muted small">напоминание отправлено</span>' : `<button class="small" data-act="remind" data-id="${x.id}">Напомнить</button>`}</div>`;
@@ -88,9 +88,9 @@ export function escRow(x) {
 const TENURE = {
   adapt: { label: 'Все новички (до 90 дней)', test: (e, d) => e.status === 'active' && d <= 90 },
   w1: { label: 'Первая неделя', test: (e, d) => e.status === 'active' && d <= 7 },
-  m1: { label: '8–30 дней', test: (e, d) => e.status === 'active' && d >= 8 && d <= 30 },
-  m2: { label: '31–60 дней', test: (e, d) => e.status === 'active' && d >= 31 && d <= 60 },
-  m3: { label: '61–90 дней', test: (e, d) => e.status === 'active' && d >= 61 && d <= 90 },
+  m1: { label: '8-30 дней', test: (e, d) => e.status === 'active' && d >= 8 && d <= 30 },
+  m2: { label: '31-60 дней', test: (e, d) => e.status === 'active' && d >= 31 && d <= 60 },
+  m3: { label: '61-90 дней', test: (e, d) => e.status === 'active' && d >= 61 && d <= 90 },
   left: { label: 'Уволившиеся (принятые за год)', test: (e) => e.status === 'left' && diffDays(e.hireDate, ctx.today) < 365 },
 };
 
@@ -160,7 +160,7 @@ export function table() {
   if (!list.length) return '<div class="empty">Никого не нашлось. Измените фильтры или добавьте новичка.</div>';
   return `<div class="count">${list.length} ${plural(list.length, 'сотрудник', 'сотрудника', 'сотрудников')} · клик по строке открывает карточку</div>
   <div class="table-wrap"><table class="list">
-    <thead><tr>${th('name', 'Сотрудник')}${all ? th('dept', 'Отдел') : ''}${th('manager', 'Руководитель')}${th('day', 'День из 90', 'Сколько календарных дней человек работает')}${th('risk', 'Риск', 'Сумма баллов по сигналам. Стрелка — изменение за неделю.')}<th>Главная причина</th></tr></thead>
+    <thead><tr>${th('name', 'Сотрудник')}${all ? th('dept', 'Отдел') : ''}${th('manager', 'Руководитель')}${th('day', 'День из 90', 'Сколько календарных дней человек работает')}${th('risk', 'Риск', 'Сумма баллов по сигналам. Стрелка - изменение за неделю.')}<th>Главная причина</th></tr></thead>
     <tbody>${list.map(({ e, a }) => {
       const m = a.metrics;
       const openTask = ctx.state.actions.find((x) => x.employeeId === e.id && x.status === 'open');
@@ -194,28 +194,28 @@ export function analytics() {
     <section class="kpis">
       ${kpi(A.hires, 'вышли на работу', 'за последние 12 месяцев')}
       ${kpi(pct(A.earlyShareOfLeavers), 'из уволившихся не доработали 90 дней', `${A.earlyLeavers} из ${A.leavers} уволившихся за 12 мес. (любой стаж)`, 'red')}
-      ${kpi(pct(A.earlyRate), 'принятых ушли в первые 90 дней', `${A.early} из ${A.matured} — только те, у кого 90 дней уже прошли`, 'amber')}
-      ${kpi(A.median == null ? '—' : `${A.median} дн.`, 'типичный срок до ухода', 'медиана среди ушедших в первые 90 дней')}
+      ${kpi(pct(A.earlyRate), 'принятых ушли в первые 90 дней', `${A.early} из ${A.matured} - только те, у кого 90 дней уже прошли`, 'amber')}
+      ${kpi(A.median == null ? '-' : `${A.median} дн.`, 'типичный срок до ухода', 'медиана среди ушедших в первые 90 дней')}
     </section>
     <div class="grid2">
-      ${ui.anDept === 'all' ? `<section class="card"><h3>В каком отделе теряем новичков ${help("% новичков отдела, уволившихся в первые 90 дней. Справа — сколько ушло из скольких принятых.")}</h3>
+      ${ui.anDept === 'all' ? `<section class="card"><h3>В каком отделе теряем новичков ${help("% новичков отдела, уволившихся в первые 90 дней. Справа - сколько ушло из скольких принятых.")}</h3>
         ${hBars(A.byDept.map((d) => ({ label: d.label, value: d.rate, text: `${pct(d.rate)} <small class="muted">${d.early} из ${d.total}</small>`, tip: `${d.label}: ушли ${d.early} из ${d.total} принятых (${pct(d.rate)})` })), 'var(--s1)', maxRate)}</section>` : ''}
       <section class="card"><h3>На каком сроке уходят ${help("Сколько человек уволилось на каждом этапе первых 90 дней.")}</h3>
         ${columns(A.byWeek.map((w) => w.label), [{ label: 'Уволились', color: 'var(--s1)', values: A.byWeek.map((w) => w.count) }])}
-        <p class="note">Пик на 1–2 неделе — проблема первых дней (встретили, объяснили, дали задачи). Пик на 3-м месяце — ожидания и деньги.</p></section>
+        <p class="note">Пик на 1-2 неделе - проблема первых дней (встретили, объяснили, дали задачи). Пик на 3-м месяце - ожидания и деньги.</p></section>
       <section class="card"><h3>Почему уходят ${help("Причина со слов сотрудника при увольнении, число человек.")}</h3>
         ${A.byReason.length ? hBars(A.byReason.map((r) => ({ label: r.label, value: r.count, text: `${r.count} чел.` }))) : '<p class="muted">Нет данных</p>'}</section>
-      <section class="card"><h3>У каких руководителей уходят чаще ${help("Из новичков руководителя (у кого 90 дней уже прошли) — сколько уволились раньше.")}</h3>
+      <section class="card"><h3>У каких руководителей уходят чаще ${help("Из новичков руководителя (у кого 90 дней уже прошли) - сколько уволились раньше.")}</h3>
         <table class="mini-table"><thead><tr><th>Руководитель</th><th class="num">Было новичков</th><th class="num">Из них ушли до 90 дней</th><th>% ушедших</th></tr></thead><tbody>
         ${A.byManager.map((r) => `<tr><td>${esc(r.label)}<div class="muted small">${esc(r.dept)}</div></td><td class="num">${r.total}</td><td class="num">${r.early}</td>
           <td class="pct-cell"><span class="pbar"><i style="width:${(r.rate ?? 0) * 100}%"></i></span> ${pct(r.rate)}${r.total < 5 ? ' <small class="muted">мало данных</small>' : ''}</td></tr>`).join('')}
         </tbody></table>
-        <p class="note">Маленькие числа — повод поговорить с руководителем, а не оценка его работы.</p></section>
+        <p class="note">Маленькие числа - повод поговорить с руководителем, а не оценка его работы.</p></section>
     </div>
     <section class="card">
       <h3>Первые две недели: чем ушедшие отличались от оставшихся ${help("Средние показатели за первые 10 рабочих дней. Проверка, есть ли смысл в сигналах риска.")}</h3>
       <table class="mini-table"><thead><tr><th></th><th class="num">Ушли до 90 дней (${A.earlyN} чел.)</th><th class="num">Остались после 90 дней (${A.stayN} чел.)</th></tr></thead><tbody>
-        ${A.compare.map((c) => `<tr><td>${c.label}</td><td class="num">${c.fmt === 'pct' ? pct(c.early) : c.early?.toFixed(1) ?? '—'}</td><td class="num">${c.fmt === 'pct' ? pct(c.stay) : c.stay?.toFixed(1) ?? '—'}</td></tr>`).join('')}
+        ${A.compare.map((c) => `<tr><td>${c.label}</td><td class="num">${c.fmt === 'pct' ? pct(c.early) : c.early?.toFixed(1) ?? '-'}</td><td class="num">${c.fmt === 'pct' ? pct(c.stay) : c.stay?.toFixed(1) ?? '-'}</td></tr>`).join('')}
       </tbody></table>
       <p class="note">Это корреляция, а не причина.</p>
     </section>`;
@@ -235,9 +235,9 @@ export function actionsPage() {
           <td>${e ? `<button class="link" data-act="open" data-id="${e.id}">${esc(e.name)}</button>` : '<span class="muted">удалён</span>'}</td>
           <td>${esc(managerName(x.responsibleId))}</td>
           <td class="nowrap ${late ? 'red' : ''}">${fmt(x.deadline)}${late ? ` · просрочено на ${overdueWorkdays(x, ctx.today) || 'менее 1'} раб. дн.` : ''}${isEscalated(x, ctx.today) ? `<div>${x.remindedAt === ctx.today ? '<span class="muted small">напоминание отправлено</span>' : `<button class="small" data-act="remind" data-id="${x.id}">Напомнить</button>`}</div>` : ''}</td>
-          <td class="nowrap">${x.status === 'open' ? (isEscalated(x, ctx.today) ? '<span class="badge high">эскалация</span>' : '<span class="badge medium">в работе</span>') : `<span class="ok">✓ выполнена ${fmt(x.doneAt)}</span>${x.comment ? `<div class="muted small">«${esc(x.comment)}»</div>` : ''}`}</td>
+          <td class="nowrap">${x.status === 'open' ? (isEscalated(x, ctx.today) ? '<span class="badge high">эскалация</span>' : '<span class="badge medium">в работе</span>') : `<span class="ok">✓ выполнена ${fmt(x.doneAt)}</span>${x.comment ? `<div class="muted small">"${esc(x.comment)}"</div>` : ''}`}</td>
         </tr>`;
       }).join('')}
-    </tbody></table></div>` : '<div class="empty">Пока нет задач. Откройте новичка с высоким риском и нажмите «Поручить руководителю».</div>'}`;
+    </tbody></table></div>` : '<div class="empty">Пока нет задач. Откройте новичка с высоким риском и нажмите "Поручить руководителю".</div>'}`;
 }
 

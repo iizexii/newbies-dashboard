@@ -1,4 +1,4 @@
-// Небольшие графики на HTML/CSS (без библиотек). Подсказка при наведении — атрибут data-tip,
+// Небольшие графики на HTML/CSS (без библиотек). Подсказка при наведении - атрибут data-tip,
 // его показывает общий обработчик в app.js. Цвет никогда не единственный носитель смысла:
 // у каждого графика есть легенда или подписи значений.
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -24,7 +24,7 @@ export function stackedBars(rows, segments, { act } = {}) {
       <span class="ch-strack">
         ${total ? `<span class="ch-sfill" style="width:${(total / max) * 100}%">${segments.map((g) => {
           const v = r.values[g.key] || 0;
-          return v ? `<i style="flex:${v};background:${g.color}" data-tip="${esc(`${r.label}: ${g.label.toLowerCase()} — ${v}`)}" tabindex="0">${v}</i>` : '';
+          return v ? `<i style="flex:${v};background:${g.color}" data-tip="${esc(`${r.label}: ${g.label.toLowerCase()} - ${v}`)}" tabindex="0">${v}</i>` : '';
         }).join('')}</span>` : '<span class="muted ch-zero">нет новичков</span>'}
       </span>
       <span class="ch-total">${total}</span>
@@ -59,7 +59,7 @@ export function columns(cats, series, { height = 170, showValues = series.length
     ${cats.map((c, i) => `<div class="ch-col">
       <div class="ch-bars">${series.map((s) => {
         const v = s.values[i];
-        return `<span class="ch-bar" style="height:${(v / top) * 100}%;background:${s.color}" data-tip="${esc(`${c}: ${s.label.toLowerCase()} — ${v}`)}" tabindex="0">${showValues && v ? `<b>${v}</b>` : ''}</span>`;
+        return `<span class="ch-bar" style="height:${(v / top) * 100}%;background:${s.color}" data-tip="${esc(`${c}: ${s.label.toLowerCase()} - ${v}`)}" tabindex="0">${showValues && v ? `<b>${v}</b>` : ''}</span>`;
       }).join('')}</div>
     </div>`).join('')}
   </div>

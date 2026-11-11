@@ -41,7 +41,7 @@ function employees() {
       <thead><tr>${th('name', 'ФИО')}${th('dept', 'Отдел')}${th('position', 'Должность')}${th('manager', 'Руководитель')}<th>Наставник</th>${th('hire', 'Вышел')}<th>Статус</th><th></th></tr></thead>
       <tbody>${list.map((e) => `<tr>
         <td><b>${esc(e.name)}</b></td><td>${esc(deptName(e.dept))}</td><td>${esc(e.position)}</td><td>${esc(managerName(e.managerId))}</td>
-        <td>${e.mentor ? esc(e.mentor) : '<span class="muted">—</span>'}</td><td class="nowrap">${fmt(e.hireDate)}</td>
+        <td>${e.mentor ? esc(e.mentor) : '<span class="muted">-</span>'}</td><td class="nowrap">${fmt(e.hireDate)}</td>
         <td class="nowrap">${e.status === 'left' ? `<span class="muted">уволен ${fmt(e.leftDate)}</span>` : tenureOf(e) <= 90 ? '<span class="badge low">новичок</span>' : 'работает'}</td>
         <td class="row-actions"><button class="small" data-act="edit-emp" data-id="${e.id}">Изменить</button><button class="small danger" data-act="del-emp" data-id="${e.id}" aria-label="Удалить">Удалить</button></td>
       </tr>`).join('')}</tbody>
@@ -66,7 +66,7 @@ function managers() {
 function depts() {
   const S = ctx.state;
   return `
-    <form data-form="dept-add" class="toolbar"><input name="name" required maxlength="40" placeholder="Новый отдел, например «Интернет-магазин»"><button class="primary">＋ Добавить отдел</button></form>
+    <form data-form="dept-add" class="toolbar"><input name="name" required maxlength="40" placeholder="Новый отдел, например &quot;Интернет-магазин&quot;"><button class="primary">＋ Добавить отдел</button></form>
     <div class="table-wrap"><table class="list admin">
       <thead><tr><th>Порядок</th><th>Название <small class="muted">(можно править прямо здесь)</small></th><th class="num">Сотрудников</th><th class="num">Руководителей</th><th>Чек-лист первых дней</th><th></th></tr></thead>
       <tbody>${S.departments.map((d, i) => `<tr>
@@ -78,5 +78,5 @@ function depts() {
         <td class="row-actions"><button class="small danger" data-act="dept-del" data-id="${d.id}">Удалить</button></td>
       </tr>`).join('')}</tbody>
     </table></div>
-    <p class="note">Порядок здесь = порядок вкладок. Название сохраняется при выходе из поля. Чек-лист — что должно случиться с новичком в первые 3 рабочих дня.</p>`;
+    <p class="note">Порядок здесь = порядок вкладок. Название сохраняется при выходе из поля. Чек-лист - что должно случиться с новичком в первые 3 рабочих дня.</p>`;
 }

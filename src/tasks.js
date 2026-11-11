@@ -1,10 +1,10 @@
-// Задачи сотрудника: правка постановщиком с историей версий и отметкой «сотрудник видел».
-// Чистые функции без DOM — их проверяют тесты.
+// Задачи сотрудника: правка постановщиком с историей версий и отметкой "сотрудник видел".
+// Чистые функции без DOM - их проверяют тесты.
 //
 // Поля задачи: { id, title, description, created, deadline, started, closed, by,
-//   version,      — номер текущей версии (1 — как поставили)
-//   history,      — [{ v, at, by, note, changes: { поле: { from, to } } }]
-//   seenVersion } — какую версию сотрудник уже открывал (0 — ещё не открывал новую задачу)
+//   version,      - номер текущей версии (1 - как поставили)
+//   history,      - [{ v, at, by, note, changes: { поле: { from, to } } }]
+//   seenVersion } - какую версию сотрудник уже открывал (0 - ещё не открывал новую задачу)
 
 export const TASK_FIELDS = { title: 'Название', description: 'Описание', deadline: 'Срок' };
 
@@ -27,14 +27,14 @@ export function editTask(t, patch, by, at, note = '') {
 }
 
 /**
- * Вернуть завершённую задачу на доработку: задача снова «в работе», комментарий постановщика
+ * Вернуть завершённую задачу на доработку: задача снова "в работе", комментарий постановщика
  * сохраняется в истории как отдельная версия, срок можно продлить. Сотрудник получит уведомление.
  */
 export function returnForRework(t, by, at, comment, deadline = t.deadline, { addToDescription = true } = {}) {
   if (!t.closed || !comment.trim()) return false;
   const v = (t.version || 1) + 1;
   const changes = deadline && deadline !== t.deadline ? { deadline: { from: t.deadline, to: deadline } } : {};
-  // комментарий дописываем в описание, чтобы он остался в самой задаче, а прежний текст — в истории
+  // комментарий дописываем в описание, чтобы он остался в самой задаче, а прежний текст - в истории
   if (addToDescription) {
     const from = t.description || '';
     changes.description = { from, to: `${from}${from ? '\n\n' : ''}Доработка ${at.split('-').reverse().join('.')}: ${comment.trim()}` };
@@ -48,7 +48,7 @@ export function returnForRework(t, by, at, comment, deadline = t.deadline, { add
   return true;
 }
 
-/** Задача сейчас на доработке: последняя версия — возврат постановщиком. */
+/** Задача сейчас на доработке: последняя версия - возврат постановщиком. */
 export const isRework = (t) => !t.closed && lastChange(t)?.kind === 'rework';
 
 /** Новая задача, которую сотрудник ещё не открывал. */
@@ -59,7 +59,7 @@ export const hasUnseenChanges = (t) => !t.closed && (t.seenVersion ?? 1) >= 1 &&
 
 export function markSeen(t) { t.seenVersion = t.version || 1; }
 
-/** Сводные изменения после версии v: по каждому полю — значение в версии v и текущее. */
+/** Сводные изменения после версии v: по каждому полю - значение в версии v и текущее. */
 export function changesSince(t, v) {
   const out = {};
   for (const h of t.history || []) {
@@ -68,7 +68,7 @@ export function changesSince(t, v) {
       out[k] = { from: out[k]?.from ?? c.from, to: c.to };
     }
   }
-  // если поле вернули к исходному значению — изменения нет
+  // если поле вернули к исходному значению - изменения нет
   for (const k of Object.keys(out)) if (out[k].from === out[k].to) delete out[k];
   return out;
 }

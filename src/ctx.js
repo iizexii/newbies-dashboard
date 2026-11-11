@@ -7,7 +7,7 @@ export const ctx = {
   state: null,
   today: null,
   ui: {
-    role: 'hr', // hr | manager | employee — демо-вход без пароля
+    role: 'hr', // hr | manager | employee - демо-вход без пароля
     asManager: 'm1',
     asEmployee: null,
     page: { hr: 'overview', manager: 'team', employee: 'today' },
@@ -26,7 +26,7 @@ export const ctx = {
 export const HR_NAME = 'Кравец Анна, HR-директор';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-export const pct = (x) => (x == null ? '—' : `${Math.round(x * 100)}%`);
+export const pct = (x) => (x == null ? '-' : `${Math.round(x * 100)}%`);
 export const uid = (p) => `${p}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 export const plural = (n, one, few, many) => {
   const a = Math.abs(n) % 100, b = a % 10;
@@ -37,10 +37,10 @@ export const plural = (n, one, few, many) => {
 };
 
 export const manager = (id) => ctx.state.managers.find((m) => m.id === id);
-export const managerName = (id) => manager(id)?.name || '—';
+export const managerName = (id) => manager(id)?.name || '-';
 /** Автор действия: руководитель по id или HR. */
 export const personName = (id) => (id === 'hr' ? `${HR_NAME.split(',')[0]} (HR)` : managerName(id));
-export const deptName = (id) => ctx.state.departments.find((d) => d.id === id)?.name || '—';
+export const deptName = (id) => ctx.state.departments.find((d) => d.id === id)?.name || '-';
 export const emp = (id) => ctx.state.employees.find((e) => e.id === id);
 
 export const checklistOf = (deptId) => ctx.state.departments.find((d) => d.id === deptId)?.checklist || [];
@@ -74,7 +74,7 @@ export function findTask(id) {
   return null;
 }
 
-/** Кнопка «?» с пояснением: текст виден по наведению и по фокусу с клавиатуры. */
+/** Кнопка "?" с пояснением: текст виден по наведению и по фокусу с клавиатуры. */
 export const help = (text) => `<button type="button" class="q" data-tip="${esc(text)}" aria-label="Пояснение: ${esc(text)}">?</button>`;
 // Стаж на сегодня без полного расчёта риска: в компании ~400 человек, риск нужен только новичкам.
 export const tenureOf = (e) => Math.max(1, diffDays(e.hireDate, e.status === 'left' && e.leftDate ? e.leftDate : ctx.today) + 1);

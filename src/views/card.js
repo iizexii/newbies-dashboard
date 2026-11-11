@@ -1,4 +1,4 @@
-// Карточка новичка (выезжающая панель). HR видит всё, руководитель — свои действия.
+// Карточка новичка (выезжающая панель). HR видит всё, руководитель - свои действия.
 import { ctx, esc, fmt, plural, assess, trend, managerName, deptName, checklistOf, help } from '../ctx.js';
 import { LEVELS, ADAPTATION_DAYS, CHECKINS, PULSE_QUESTIONS } from '../risk.js';
 import { addDays, diffDays } from '../dates.js';
@@ -16,7 +16,7 @@ export function timeline(m) {
   }).join('');
   return `<div class="timeline">
     <div class="tl-bar"><div class="tl-fill" style="width:${(day / ADAPTATION_DAYS) * 100}%"></div>${marks}<i class="mark end" style="left:100%"><span>90</span></i></div>
-    <div class="tl-cap">День ${m.tenureDays}${m.tenureDays <= 90 ? ' из 90' : ' — адаптация пройдена'} · точки — встречи с руководителем</div>
+    <div class="tl-cap">День ${m.tenureDays}${m.tenureDays <= 90 ? ' из 90' : ' - адаптация пройдена'} · точки - встречи с руководителем</div>
   </div>`;
 }
 
@@ -24,7 +24,7 @@ export function checkinList(e, m, canMark) {
   return m.checkins.map((c) => `
     <div class="checkin">
       <span class="dots"><i class="${c.done ? 'ok' : c.overdue ? 'bad' : 'wait'}">${c.day}</i></span>
-      <span class="grow">${c.label}${c.done ? ` — проведена ${fmt(c.done)}` : c.overdue ? ` — <span class="red">просрочена на ${c.overdueBy} дн.</span>` : c.due ? ' — пора провести' : ` — ${fmt(addDays(e.hireDate, c.day - 1))}`}</span>
+      <span class="grow">${c.label}${c.done ? ` - проведена ${fmt(c.done)}` : c.overdue ? ` - <span class="red">просрочена на ${c.overdueBy} дн.</span>` : c.due ? ' - пора провести' : ` - ${fmt(addDays(e.hireDate, c.day - 1))}`}</span>
       ${canMark && e.status === 'active' ? (c.done
         ? `<button class="link" data-act="checkin-undo" data-id="${e.id}" data-k="${c.key}">отменить</button>`
         : `<button class="small" data-act="checkin" data-id="${e.id}" data-k="${c.key}">Провёл встречу</button>`) : ''}
@@ -48,7 +48,7 @@ function pulseBlock(m) {
   return `<table class="mini-table"><thead><tr><th></th>${answered.map((p) => `<th class="num">${p.day}-й день<div class="muted small">${fmt(p.answer.date)}</div></th>`).join('')}</tr></thead><tbody>
     ${PULSE_QUESTIONS.map((q) => `<tr><td>${esc(q.label)}</td>${answered.map((p) => { const v = p.answer[q.key]; return `<td class="num ${v <= 2 ? 'red' : v >= 4 ? 'ok' : ''}"><b>${v}</b> из 5</td>`; }).join('')}</tr>`).join('')}
   </tbody></table>
-  ${answered.filter((p) => p.answer.comment).map((p) => `<p class="quote">«${esc(p.answer.comment)}» <span class="muted small">— ${p.day}-й день</span></p>`).join('')}`;
+  ${answered.filter((p) => p.answer.comment).map((p) => `<p class="quote">"${esc(p.answer.comment)}" <span class="muted small">- ${p.day}-й день</span></p>`).join('')}`;
 }
 
 export function activityStrip(e, m) {
@@ -100,19 +100,19 @@ export function drawer(e) {
       })()}</div>
       ${a.reasons.length ? `<ul class="reasons">${a.reasons.map((r) => `<li><b>+${r.points}</b> ${esc(r.text)}</li>`).join('')}</ul>` : ''}
       ${a.ok.length ? `<ul class="oks">${a.ok.map((t) => `<li>✓ ${esc(t)}</li>`).join('')}</ul>` : ''}
-      ${a.level === 'done' ? '<p class="muted">Прошёл 90 дней — риск раннего ухода больше не считаем.</p>' : ''}
+      ${a.level === 'done' ? '<p class="muted">Прошёл 90 дней - риск раннего ухода больше не считаем.</p>' : ''}
     </section>
     <div class="actions-row">${actions}</div>
 
     ${myActions.length ? `<section><h3>Поручения руководителю</h3>${myActions.map((x) => `
       <div class="act-item ${x.status}"><span>${x.status === 'done' ? '✓' : '●'} ${esc(x.title)}</span>
-      <small class="muted">${esc(managerName(x.responsibleId))} · срок ${fmt(x.deadline)}${x.status === 'done' ? ` · выполнена ${fmt(x.doneAt)}` : ''}${x.comment ? ` · «${esc(x.comment)}»` : ''}</small></div>`).join('')}</section>` : ''}
+      <small class="muted">${esc(managerName(x.responsibleId))} · срок ${fmt(x.deadline)}${x.status === 'done' ? ` · выполнена ${fmt(x.doneAt)}` : ''}${x.comment ? ` · "${esc(x.comment)}"` : ''}</small></div>`).join('')}</section>` : ''}
 
     <section><h3>Встречи с руководителем</h3>${checkinList(e, m, true)}</section>
 
-    ${checklistOf(e.dept).length ? `<section><h3>Первые дни: чек-лист отдела ${help('Пункты настраиваются в «Админка → Отделы». Если к 3-му рабочему дню что-то не выполнено, это сигнал риска.')}</h3>${checklistBlock(e, true)}</section>` : ''}
+    ${checklistOf(e.dept).length ? `<section><h3>Первые дни: чек-лист отдела ${help('Пункты настраиваются в "Админка → Отделы". Если к 3-му рабочему дню что-то не выполнено, это сигнал риска.')}</h3>${checklistBlock(e, true)}</section>` : ''}
 
-    <section><h3>Опрос новичка ${help('Три вопроса на 7-й и 30-й день, оценки 1–5. Оценка 1–2 по любому вопросу — сигнал риска +2.')}</h3>${pulseBlock(m)}</section>
+    <section><h3>Опрос новичка ${help('Три вопроса на 7-й и 30-й день, оценки 1-5. Оценка 1-2 по любому вопросу - сигнал риска +2.')}</h3>${pulseBlock(m)}</section>
 
     <section>
       <h3>Задачи в Битрикс24 и отметки</h3>
@@ -121,23 +121,23 @@ export function drawer(e) {
         <div><b>${m.closed}</b><span>завершил${m.closedLate ? `, <span class="amber">из них ${m.closedLate} с опозданием</span>` : ''}</span></div>
         <div><b class="${m.overdueNotStarted ? 'red' : ''}">${m.overdueNotStarted}</b><span>не взялся, срок прошёл</span></div>
         <div><b class="${m.overdueStuck ? 'red' : ''}">${m.overdueStuck}</b><span>начал и застрял после срока</span></div>
-        <div><b class="${m.idleStreak >= 5 ? 'red' : ''}">${m.received ? m.idleStreak : '—'}</b><span>раб. дн. подряд без действий в задачах</span></div>
-        <div><b>${m.hasAttendance ? `${m.presentDays}/${m.workdaysCount}` : '—'}</b><span>отметился на работе, раб. дн.</span></div>
+        <div><b class="${m.idleStreak >= 5 ? 'red' : ''}">${m.received ? m.idleStreak : '-'}</b><span>раб. дн. подряд без действий в задачах</span></div>
+        <div><b>${m.hasAttendance ? `${m.presentDays}/${m.workdaysCount}` : '-'}</b><span>отметился на работе, раб. дн.</span></div>
       </div>
       ${activityStrip(e, m)}
-      <p class="note">«Нет действий в задачах» — в этот день человек не начал и не завершил ни одной задачи в Б24. Работа на складе или в зале может идти вне Б24, это повод спросить, а не обвинить.</p>
+      <p class="note">"Нет действий в задачах" - в этот день человек не начал и не завершил ни одной задачи в Б24. Работа на складе или в зале может идти вне Б24, это повод спросить, а не обвинить.</p>
     </section>
 
     <section>
       <h3>Последние задачи ${tasks.length > 6 ? `<button class="link" data-act="all-tasks">${ctx.ui.showAllTasks ? 'свернуть' : `все ${tasks.length}`}</button>` : ''}</h3>
       ${tasks.length ? `<table class="tasks"><thead><tr><th>Задача</th><th>Срок</th><th>Статус</th></tr></thead><tbody>
         ${shown.map((t) => `<tr data-act="task-view" data-id="${t.id}" class="click"><td><b>${esc(t.title)}</b> ${changeMark(t, false)}<div class="muted clamp">${esc(String(t.description || '').split('\n')[0])}</div></td><td class="nowrap">${fmt(t.deadline)}</td><td>${taskStatus(t, m.end)}</td></tr>`).join('')}
-      </tbody></table><p class="note">Клик по задаче — описание и история изменений${role !== 'employee' && e.status === 'active' ? ', там же можно изменить задачу' : ''}.</p>` : '<p class="muted">Задач в Б24 пока нет.</p>'}
+      </tbody></table><p class="note">Клик по задаче - описание и история изменений${role !== 'employee' && e.status === 'active' ? ', там же можно изменить задачу' : ''}.</p>` : '<p class="muted">Задач в Б24 пока нет.</p>'}
     </section>
   </aside>`;
 }
 
-/** Статус задачи с учётом срока. end — дата, на которую смотрим (сегодня или день увольнения). */
+/** Статус задачи с учётом срока. end - дата, на которую смотрим (сегодня или день увольнения). */
 export function taskStatus(t, end) {
   const closed = t.closed && t.closed <= end;
   const started = t.started && t.started <= end;

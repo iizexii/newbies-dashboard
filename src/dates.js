@@ -23,7 +23,7 @@ export function diffDays(fromIso, toIso) {
   return Math.round((fromISO(toIso) - fromISO(fromIso)) / 86400000);
 }
 
-// В демо рабочие дни — Пн–Пт. Праздники и сменные графики не учитываются.
+// В демо рабочие дни - Пн-Пт. Праздники и сменные графики не учитываются.
 export function isWorkday(iso) {
   const wd = fromISO(iso).getDay();
   return wd !== 0 && wd !== 6;
@@ -53,7 +53,7 @@ export function todayISO() {
 }
 
 export function fmt(iso) {
-  if (!iso) return '—';
+  if (!iso) return '-';
   const [y, m, d] = iso.split('-');
   return `${d}.${m}.${y}`;
 }

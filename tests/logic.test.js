@@ -36,7 +36,7 @@ test('активность = начал или завершил задачу; п
   assert.ok(r.reasons.some((x) => x.text.startsWith('7 раб. дн. подряд')));
 });
 
-test('идеальный новичок — низкий риск', () => {
+test('идеальный новичок - низкий риск', () => {
   const days = workdaysBetween('2026-11-02', '2026-11-10');
   const e = base({ tasks: days.map((d) => task(d, d, d)) });
   const r = assessRisk(e, TODAY);
@@ -54,7 +54,7 @@ test('пропущенная встреча 7-го дня учитывается
   assert.ok(!assessRisk(late, TODAY).reasons.some((x) => x.text.includes('7-го дня')));
 });
 
-test('пороги уровней: 5+ высокий, 2–4 внимание', () => {
+test('пороги уровней: 5+ высокий, 2-4 внимание', () => {
   const noMentorNoTasks = base({ mentor: '' }); // +2 наставник, +3 нет задач
   assert.equal(assessRisk(noMentorNoTasks, TODAY).level, 'high');
   const days = workdaysBetween('2026-11-02', '2026-11-10');
@@ -110,7 +110,7 @@ test('демо "не протухает": через 2 недели даты с�
   assert.ok(diff <= 6, `изменилось уровней: ${diff}`);
 });
 
-test('действие сегодня обнуляет серию без активности, отметка сегодня — серию пропусков', () => {
+test('действие сегодня обнуляет серию без активности, отметка сегодня - серию пропусков', () => {
   const idle = base({ tasks: [task('2026-11-02', null, null, '2026-11-20')], attendance: {} });
   let m = computeMetrics(idle, TODAY);
   assert.equal(m.idleStreak, 7);
@@ -136,7 +136,7 @@ const healthy = (extra) => {
 };
 const why = (e) => assessRisk(e, TODAY).reasons.map((r) => `${r.points}:${r.text}`);
 
-test('не начатая задача со сроком в прошлом — «не взялся»', () => {
+test('не начатая задача со сроком в прошлом - "не взялся"', () => {
   const e = healthy([task('2026-11-03', null, null, '2026-11-06')]);
   const m = computeMetrics(e, TODAY);
   assert.equal(m.overdueNotStarted, 1);
@@ -144,7 +144,7 @@ test('не начатая задача со сроком в прошлом — �
   assert.ok(why(e).includes('1:Не взялся за 1 задачу со сроком'));
 });
 
-test('начатая и не законченная после срока — «застряла», отдельный сигнал', () => {
+test('начатая и не законченная после срока - "застряла", отдельный сигнал', () => {
   const e = healthy([1, 2, 3].map(() => task('2026-11-03', '2026-11-03', null, '2026-11-05')));
   const m = computeMetrics(e, TODAY);
   assert.equal(m.overdueStuck, 3);
@@ -154,7 +154,7 @@ test('начатая и не законченная после срока — «
   assert.ok(r.hint.includes('Разобрать'));
 });
 
-test('срок сегодня — ещё не просрочка', () => {
+test('срок сегодня - ещё не просрочка', () => {
   const e = healthy([task('2026-11-09', null, null, TODAY)]);
   assert.equal(computeMetrics(e, TODAY).overdue, 0);
 });
@@ -178,7 +178,7 @@ test('систематические опоздания (больше полов
 });
 
 // ---- правка задачи постановщиком: история версий и уведомление сотруднику ----
-test('правка задачи пишет историю, повышает версию и помечает задачу «изменена»', async () => {
+test('правка задачи пишет историю, повышает версию и помечает задачу "изменена"', async () => {
   const { editTask, hasUnseenChanges, markSeen, changesSince, versionSnapshot } = await import('../src/tasks.js');
   const t = { id: 1, title: 'Приёмка', description: 'Пересчитать', created: '2026-11-02', deadline: '2026-11-05', started: null, closed: null, version: 1, history: [], seenVersion: 1 };
   assert.equal(editTask(t, { title: 'Приёмка' }, 'm1', '2026-11-03'), null, 'без изменений истории нет');
@@ -216,12 +216,12 @@ test('возврат на доработку: задача снова в раб�
   assert.equal(returnForRework(t, 'm3', TODAY, 'ещё раз'), false, 'открытую задачу вернуть нельзя');
   markSeen(t);
   editTask(t, { description: 'По планограмме, с ценниками' }, 'm3', TODAY);
-  assert.ok(!isRework(t), 'после следующей правки задача — просто «изменена»');
-  // открытая, срок 13.11 ещё не прошёл — не просрочка
+  assert.ok(!isRework(t), 'после следующей правки задача - просто "изменена"');
+  // открытая, срок 13.11 ещё не прошёл - не просрочка
   assert.equal(computeMetrics(base({ tasks: [t] }), TODAY).overdue, 0);
 });
 
-test('новая задача — «новая», а не «изменена», даже если её успели поправить', async () => {
+test('новая задача - "новая", а не "изменена", даже если её успели поправить', async () => {
   const { editTask, isNewTask, hasUnseenChanges } = await import('../src/tasks.js');
   const t = { title: 'A', description: '', deadline: '2026-11-12', version: 1, history: [], seenVersion: 0 };
   editTask(t, { deadline: '2026-11-13' }, 'm1', TODAY);
@@ -240,7 +240,7 @@ test('чек-лист первых дней: с 3-го рабочего дня �
   assert.equal(assessRisk(e, '2026-11-03', { checklist }).reasons.filter((r) => r.text.includes('чек-лист')).length, 0, 'во 2-й рабочий день ещё рано');
 });
 
-test('опрос: оценка 1–2 даёт +2 с советом для руководителя, высокие оценки — в «в порядке»', () => {
+test('опрос: оценка 1-2 даёт +2 с советом для руководителя, высокие оценки - в "в порядке"', () => {
   const days = workdaysBetween('2026-10-26', '2026-11-10');
   const e = base({ hireDate: '2026-10-26', checkins: { d7: '2026-11-02' }, tasks: days.map((d) => task(d, d, d)), pulse: { d7: { date: '2026-11-02', clarity: 2, support: 4, comfort: 5, comment: 'Не понимаю задачи' } } });
   const r = assessRisk(e, TODAY);
@@ -284,7 +284,7 @@ test('поздно закрытая задача перестаёт давать
   assert.equal(computeMetrics(e, TODAY).overdue, 0);
 });
 
-test('демо как у заказчика: ~400 работающих, ранние уходы — около трети всех уволившихся за год', async () => {
+test('демо как у заказчика: ~400 работающих, ранние уходы - около трети всех уволившихся за год', async () => {
   const today = '2026-11-11';
   const s = generateDemo(today);
   const active = s.employees.filter((e) => e.status === 'active').length;

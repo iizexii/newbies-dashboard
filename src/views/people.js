@@ -24,7 +24,7 @@ export function managerTeam() {
       <div class="kpi"><b>${team.length}</b><span>${plural(team.length, 'новичок', 'новичка', 'новичков')} в команде</span><small>работают меньше 90 дней</small></div>
       <div class="kpi red"><b>${team.filter((e) => assess(e).level === 'high').length}</b><span>с высоким риском</span><small>поговорите с ними на этой неделе</small></div>
       <div class="kpi"><b>${notHere.length}</b><span>не отметились сегодня</span><small>${notHere.length ? esc(notHere.slice(0, 2).map((e) => e.name.split(' ')[0]).join(', ')) + (notHere.length > 2 ? '…' : '') : 'все на месте'}</small></div>
-      <div class="kpi amber click" data-act="page" data-p="mytasks" role="button" tabindex="0"><b>${fromHr.length}</b><span>поручений от HR</span><small>${fromHr.some((x) => isEscalated(x, ctx.today)) ? '<span class="red">есть просроченные — HR видит</span>' : 'открыть список →'}</small></div>
+      <div class="kpi amber click" data-act="page" data-p="mytasks" role="button" tabindex="0"><b>${fromHr.length}</b><span>поручений от HR</span><small>${fromHr.some((x) => isEscalated(x, ctx.today)) ? '<span class="red">есть просроченные - HR видит</span>' : 'открыть список →'}</small></div>
     </section>
     ${team.length ? `<div class="cards">${team.map(teamCard).join('')}</div>` : '<div class="empty">Сейчас в команде нет новичков.</div>'}`;
 }
@@ -46,7 +46,7 @@ function teamCard(e) {
       <li>${m.checkedInToday ? `<span class="ok">✓</span> На работе с ${m.checkedInToday}` : '<span class="red">✕</span> Сегодня не отметился'}</li>
       <li>${e.mentor ? `<span class="ok">✓</span> Наставник: ${esc(e.mentor)}` : '<span class="red">✕</span> Нет наставника'}</li>
       ${m.checklistTotal ? `<li>${m.checklistDone === m.checklistTotal ? '<span class="ok">✓</span>' : '<span class="red">✕</span>'} Первые дни: ${m.checklistDone} из ${m.checklistTotal} пунктов</li>` : ''}
-      ${lp ? `<li>${lowQ.length ? `<span class="red">✕</span> Опрос ${lp.day}-го дня: «${esc(lowQ[0].label)}» — ${lp.answer[lowQ[0].key]} из 5` : `<span class="ok">✓</span> Опрос ${lp.day}-го дня: всё хорошо`}</li>` : ''}
+      ${lp ? `<li>${lowQ.length ? `<span class="red">✕</span> Опрос ${lp.day}-го дня: "${esc(lowQ[0].label)}" - ${lp.answer[lowQ[0].key]} из 5` : `<span class="ok">✓</span> Опрос ${lp.day}-го дня: всё хорошо`}</li>` : ''}
       <li>Задач открыто: <b>${openTasks}</b>${m.overdueNotStarted ? `, <span class="red">не взялся в срок: ${m.overdueNotStarted}</span>` : ''}${m.overdueStuck ? `, <span class="red">застряло: ${m.overdueStuck}</span>` : ''}</li>
     </ul>
     ${a.reasons.length ? `<div class="pc-why"><b>Что тревожит:</b><ul>${a.reasons.slice(0, 3).map((r) => `<li>${esc(r.text)}</li>`).join('')}</ul></div>` : '<div class="pc-why ok">Всё идёт нормально.</div>'}
@@ -70,13 +70,13 @@ export function managerTeamTasks() {
   const unseen = rows.filter(({ t }) => hasUnseenChanges(t) || isNewTask(t)).length;
   return `
     <section class="toolbar">
-      <label class="check"><input type="checkbox" data-act="tt-done" ${showDone ? 'checked' : ''}> Показать завершённые</label>${help('Завершённую задачу можно вернуть на доработку с комментарием: она снова появится у сотрудника в «В работе».')}
+      <label class="check"><input type="checkbox" data-act="tt-done" ${showDone ? 'checked' : ''}> Показать завершённые</label>${help('Завершённую задачу можно вернуть на доработку с комментарием: она снова появится у сотрудника в "В работе".')}
       <span class="muted small">${rows.length} ${plural(rows.length, 'задача', 'задачи', 'задач')}${unseen ? ` · ${unseen} сотрудники ещё не открывали после постановки или изменения` : ''}</span>
       <span class="grow"></span>
       ${team.length ? `<button class="primary" data-act="give-task">${icon('plus')} Поставить задачу</button>` : ''}
     </section>
     ${rows.length ? `<div class="table-wrap"><table class="list">
-      <thead><tr><th>Задача</th><th>Исполнитель</th><th>Срок</th><th>Статус</th><th>Изменения ${help('Если поменять название, описание или срок, сотрудник увидит актуальную версию с отметкой «Изменена» и что поменялось. Прошлые версии хранятся в истории.')}</th><th></th></tr></thead>
+      <thead><tr><th>Задача</th><th>Исполнитель</th><th>Срок</th><th>Статус</th><th>Изменения ${help('Если поменять название, описание или срок, сотрудник увидит актуальную версию с отметкой "Изменена" и что поменялось. Прошлые версии хранятся в истории.')}</th><th></th></tr></thead>
       <tbody>${rows.map(({ e, t }) => `<tr data-act="task-view" data-id="${t.id}">
         <td><b>${esc(t.title)}</b><div class="muted clamp">${esc(firstLine(t.description))}</div></td>
         <td>${esc(e.name)}</td>
@@ -102,7 +102,7 @@ export function managerTasks() {
       <div class="ti-main">
         <b>${esc(x.title)} ${!x.seenByManager ? '<span class="chip blue strong">Новое</span>' : ''}${x.remindedAt && x.status === 'open' ? `<span class="chip orange strong">HR напомнил ${fmt(x.remindedAt).slice(0, 5)}</span>` : ''}</b>
         <small class="muted">от HR · поставлено ${fmt(x.created)} · <span class="${late ? 'red' : ''}">срок ${fmt(x.deadline)}${late ? ' (просрочено)' : ''}</span></small>
-        ${esc8 ? `<small class="red">${icon('alert')} Просрочено на ${overdueWorkdays(x, ctx.today)} раб. дн. — HR видит это в уведомлениях</small>` : ''}
+        ${esc8 ? `<small class="red">${icon('alert')} Просрочено на ${overdueWorkdays(x, ctx.today)} раб. дн. - HR видит это в уведомлениях</small>` : ''}
         <details ${!x.seenByManager ? 'open' : ''}><summary>описание</summary><div class="tdesc">${esc(x.description)}</div></details>
       </div>
       <div class="ti-act">
@@ -165,10 +165,10 @@ export function employeeToday() {
         ${timeline(m)}
         <ul class="pc-facts">
           <li>Руководитель: <b>${esc(managerName(e.managerId))}</b></li>
-          <li>Наставник: ${e.mentor ? `<b>${esc(e.mentor)}</b> — к нему можно с любым вопросом` : '<span class="muted">пока не назначен — спросите руководителя</span>'}</li>
+          <li>Наставник: ${e.mentor ? `<b>${esc(e.mentor)}</b> - к нему можно с любым вопросом` : '<span class="muted">пока не назначен - спросите руководителя</span>'}</li>
           <li>${!next ? 'Все встречи адаптации пройдены' : next.due
-            ? `Пора встретиться с руководителем (<b>встреча ${next.day}-го дня</b>) — если он не позвал, напомните сами`
-            : `Следующая встреча с руководителем — <b>${next.day}-й день</b>, около ${fmt(addDays(e.hireDate, next.day - 1))}`}</li>
+            ? `Пора встретиться с руководителем (<b>встреча ${next.day}-го дня</b>) - если он не позвал, напомните сами`
+            : `Следующая встреча с руководителем - <b>${next.day}-й день</b>, около ${fmt(addDays(e.hireDate, next.day - 1))}`}</li>
         </ul>
       </section>
       <section class="card">
@@ -184,10 +184,10 @@ function pulseCard(e, p) {
     <h3>Как вам первые ${p.day} ${plural(p.day, 'день', 'дня', 'дней')}? <span class="muted small">3 вопроса, меньше минуты</span></h3>
     <form data-form="pulse" data-id="${e.id}" data-k="${p.key}">
       ${PULSE_QUESTIONS.map((q) => `<fieldset class="scale"><legend>${esc(q.label)}</legend>
-        <div class="scale-row">${[1, 2, 3, 4, 5].map((v) => `<label><input type="radio" name="${q.key}" value="${v}" required><span>${v}</span></label>`).join('')}<small class="muted">1 — совсем нет, 5 — полностью</small></div>
+        <div class="scale-row">${[1, 2, 3, 4, 5].map((v) => `<label><input type="radio" name="${q.key}" value="${v}" required><span>${v}</span></label>`).join('')}<small class="muted">1 - совсем нет, 5 - полностью</small></div>
       </fieldset>`).join('')}
       <label class="full">Что мешает или чего не хватает? (необязательно)<textarea name="comment" rows="2" maxlength="300"></textarea></label>
-      <p class="note">Ответы увидят HR и ваш руководитель — чтобы помочь, а не оценить вас.</p>
+      <p class="note">Ответы увидят HR и ваш руководитель - чтобы помочь, а не оценить вас.</p>
       <button class="primary">Отправить</button>
     </form>
   </section>`;
@@ -219,12 +219,12 @@ export function employeeTasks() {
   const nFresh = lateCount(fresh);
   const nStuck = lateCount(inWork);
   return `
-    <p class="sub">Задачи из Битрикс24. Нажмите на название, чтобы прочитать, что нужно сделать. Если постановщик изменил задачу, вы увидите отметку «Изменена» и что именно поменялось.</p>
+    <p class="sub">Задачи из Битрикс24. Нажмите на название, чтобы прочитать, что нужно сделать. Если постановщик изменил задачу, вы увидите отметку "Изменена" и что именно поменялось.</p>
     <div class="kanban">
       ${col('Новые', fresh, (t) => `<button class="small" data-act="t-start" data-id="${t.id}">Начать</button>`, 'Новых задач нет.',
-        nFresh ? `<p class="ti-hint">У ${nFresh} ${plural(nFresh, 'задачи', 'задач', 'задач')} срок уже прошёл. Непонятно, с чего начать или что от вас ждут? Скажите руководителю — это нормально.</p>` : '')}
-      ${col('В работе', inWork, (t) => `<button class="primary small" data-act="t-done" data-id="${t.id}">Завершить</button><button class="small" data-act="t-pause" data-id="${t.id}" data-tip="Приостановить: задача вернётся в «Новые»" aria-label="Приостановить">⏸</button>`, 'Ничего не в работе.',
-        nStuck ? `<p class="ti-hint">${nStuck} ${plural(nStuck, 'задача застряла', 'задачи застряли', 'задач застряли')} после срока. Если не получается — спросите наставника, вместе быстрее.</p>` : '')}
-      ${col('Завершено', done, (t) => `<button class="small" data-act="t-undo" data-id="${t.id}" data-tip="Возобновить: задача вернётся в «В работе»">Вернуть</button>`, 'Пока ничего.')}
+        nFresh ? `<p class="ti-hint">У ${nFresh} ${plural(nFresh, 'задачи', 'задач', 'задач')} срок уже прошёл. Непонятно, с чего начать или что от вас ждут? Скажите руководителю - это нормально.</p>` : '')}
+      ${col('В работе', inWork, (t) => `<button class="primary small" data-act="t-done" data-id="${t.id}">Завершить</button><button class="small" data-act="t-pause" data-id="${t.id}" data-tip="Приостановить: задача вернётся в &quot;Новые&quot;" aria-label="Приостановить">⏸</button>`, 'Ничего не в работе.',
+        nStuck ? `<p class="ti-hint">${nStuck} ${plural(nStuck, 'задача застряла', 'задачи застряли', 'задач застряли')} после срока. Если не получается - спросите наставника, вместе быстрее.</p>` : '')}
+      ${col('Завершено', done, (t) => `<button class="small" data-act="t-undo" data-id="${t.id}" data-tip="Возобновить: задача вернётся в &quot;В работе&quot;">Вернуть</button>`, 'Пока ничего.')}
     </div>`;
 }

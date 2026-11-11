@@ -22,7 +22,7 @@ export function isMatured(e, today) {
 const WEEK_BUCKETS = [
   { label: '1-я неделя', from: 1, to: 7 },
   { label: '2-я неделя', from: 8, to: 14 },
-  { label: '3–4 недели', from: 15, to: 30 },
+  { label: '3-4 недели', from: 15, to: 30 },
   { label: '2-й месяц', from: 31, to: 60 },
   { label: '3-й месяц', from: 61, to: 90 },
 ];
@@ -59,7 +59,7 @@ export function buildAnalytics(state, today, deptId = 'all') {
   const matured = hires.filter((e) => isMatured(e, today));
   const early = hires.filter(isEarlyLeaver);
   const leftAll = hires.filter((e) => e.status === 'left');
-  // Метрика заказчика: «каждый третий из ушедших не доработал до 3 месяцев» —
+  // Метрика заказчика: "каждый третий из ушедших не доработал до 3 месяцев" -
   // все уволившиеся за 12 мес. (любой стаж) и доля ранних среди них.
   const leavers = state.employees.filter((e) => e.status === 'left' && e.leftDate && e.leftDate >= from && (deptId === 'all' || e.dept === deptId));
   const earlyLeavers = leavers.filter(isEarlyLeaver);
@@ -83,7 +83,7 @@ export function buildAnalytics(state, today, deptId = 'all') {
       const m = matured.filter((e) => e.managerId === mg.id);
       const l = early.filter((e) => e.managerId === mg.id);
       const dept = state.departments.find((d) => d.id === mg.dept);
-      return { id: mg.id, label: mg.name, dept: dept ? dept.name : '—', total: m.length, early: l.length, rate: rate(l.length, m.length) };
+      return { id: mg.id, label: mg.name, dept: dept ? dept.name : '-', total: m.length, early: l.length, rate: rate(l.length, m.length) };
     })
     .filter((r) => r.total > 0)
     .sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1));

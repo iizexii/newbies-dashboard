@@ -28,14 +28,14 @@ const tip = document.getElementById('tip');
 const PAGES = {
   hr: [
     { id: 'overview', icon: 'home', label: 'Обзор', title: 'Обзор', sub: 'Главное по новичкам за минуту: кто в зоне риска и где теряем людей.', render: hr.overview },
-    { id: 'newbies', icon: 'users', label: 'Новички', title: 'Новички', sub: 'Все, кто работает меньше 90 дней, по отделам. Самые тревожные — сверху.', render: hr.newbies },
+    { id: 'newbies', icon: 'users', label: 'Новички', title: 'Новички', sub: 'Все, кто работает меньше 90 дней, по отделам. Самые тревожные - сверху.', render: hr.newbies },
     { id: 'analytics', icon: 'chart', label: 'Аналитика уходов', title: 'Аналитика ранних уходов', sub: 'Где, когда и почему люди увольняются в первые 90 дней.', render: hr.analytics },
-    { id: 'actions', icon: 'flag', label: 'Поручения', title: 'Поручения руководителям', sub: 'Задачи, которые HR поставил руководителям по новичкам. Просрочка 2+ рабочих дня — эскалация.', render: hr.actionsPage, badge: () => ctx.state.actions.filter((a) => a.status === 'open').length },
+    { id: 'actions', icon: 'flag', label: 'Поручения', title: 'Поручения руководителям', sub: 'Задачи, которые HR поставил руководителям по новичкам. Просрочка 2+ рабочих дня - эскалация.', render: hr.actionsPage, badge: () => ctx.state.actions.filter((a) => a.status === 'open').length },
     { id: 'admin', icon: 'sliders', label: 'Админка', title: 'Админка', sub: 'Справочники: сотрудники, руководители, отделы и чек-листы первых дней.', render: admin },
   ],
   manager: [
     { id: 'team', icon: 'users', label: 'Мои новички', title: 'Мои новички', sub: 'Кто на месте, что тревожит и какие встречи пора провести.', render: people.managerTeam },
-    { id: 'teamtasks', icon: 'tasks', label: 'Задачи новичков', title: 'Задачи новичков', sub: 'Задачи, которые вы поставили новичкам. Здесь же их можно изменить — сотрудник увидит, что поменялось.', render: people.managerTeamTasks },
+    { id: 'teamtasks', icon: 'tasks', label: 'Задачи новичков', title: 'Задачи новичков', sub: 'Задачи, которые вы поставили новичкам. Здесь же их можно изменить - сотрудник увидит, что поменялось.', render: people.managerTeamTasks },
     { id: 'mytasks', icon: 'flag', label: 'Поручения от HR', title: 'Поручения от HR', sub: 'Что HR попросил сделать по вашим новичкам.', render: people.managerTasks, badge: () => ctx.state.actions.filter((a) => a.status === 'open' && a.responsibleId === ui.asManager).length },
   ],
   employee: [
@@ -48,7 +48,7 @@ function fixIdentity() {
   if (!manager(ui.asManager)) ui.asManager = ctx.state.managers[0]?.id || null;
   const list = newcomers();
   if (!list.some((e) => e.id === ui.asEmployee)) {
-    // в демо сразу открываем новичка, у которого есть изменённая задача — так видно уведомления
+    // в демо сразу открываем новичка, у которого есть изменённая задача - так видно уведомления
     const byName = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     const pickOne = byName.find((e) => (e.tasks || []).some(hasUnseenChanges)) || byName.find((e) => (e.tasks || []).some((t) => !t.closed)) || byName[0];
     ui.asEmployee = pickOne?.id || null;
@@ -58,7 +58,7 @@ function fixIdentity() {
 }
 
 function persist() {
-  if (!saveState(ctx.state)) toast('Браузер не дал сохранить данные — изменения пропадут после перезагрузки', 'warn');
+  if (!saveState(ctx.state)) toast('Браузер не дал сохранить данные - изменения пропадут после перезагрузки', 'warn');
 }
 function saveUi() {
   try { localStorage.setItem(UI_KEY, JSON.stringify({ role: ui.role, asManager: ui.asManager, asEmployee: ui.asEmployee, page: ui.page })); } catch { /* ignore */ }
@@ -95,7 +95,7 @@ function sidebar() {
       ${who}
     </div>
     <div class="side-foot">
-      <span class="src" data-tip="Сотрудники и задачи — синтетические. Интеграции с Битрикс24 в демо нет." tabindex="0">Источник: демо-данные</span>
+      <span class="src" data-tip="Сотрудники и задачи - синтетические. Интеграции с Битрикс24 в демо нет." tabindex="0">Источник: демо-данные</span>
       <span>Сегодня ${fmt(ctx.today)}</span>
       <button class="link" data-act="reset">Сбросить демо</button>
     </div>
@@ -169,10 +169,10 @@ function taskModal(e) {
   const day = a.metrics.tenureDays;
   const desc = [
     `${e.name}, ${e.position.toLowerCase()}, день ${day} из 90. Сигналы риска раннего ухода:`,
-    ...a.reasons.map((r) => `— ${r.text}`),
+    ...a.reasons.map((r) => `- ${r.text}`),
     '',
-    'Что сделать: встреча 1:1 на 15–20 минут — спросить, что мешает и что непонятно.',
-    ...a.reasons.filter((r) => r.hint).map((r) => `— ${r.hint}`),
+    'Что сделать: встреча 1:1 на 15-20 минут - спросить, что мешает и что непонятно.',
+    ...a.reasons.filter((r) => r.hint).map((r) => `- ${r.hint}`),
     'Итог отметить в карточке новичка.',
   ].join('\n');
   const mgs = ctx.state.managers.filter((m) => m.dept === e.dept);
@@ -203,13 +203,13 @@ function empModal(e) {
       <datalist id="positions">${positions.map((p) => `<option value="${esc(p)}">`).join('')}</datalist>
       <div class="row2">
         <label>Руководитель<select name="managerId" required>
-          <option value="">— выбрать —</option>
+          <option value="">- выбрать -</option>
           ${ctx.state.departments.map((dep) => `<optgroup label="${esc(dep.name)}">${ctx.state.managers.filter((m) => m.dept === dep.id).map((m) => `<option value="${m.id}" ${m.id === d.managerId ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</optgroup>`).join('')}
         </select></label>
         <label>Дата выхода<input type="date" name="hireDate" required max="${ctx.today}" value="${d.hireDate}"></label>
       </div>
       <label>Наставник<input name="mentor" value="${esc(d.mentor)}" placeholder="не назначен"></label>
-      ${isNew ? '<p class="note">Нет нужного руководителя — добавьте его в «Админка → Руководители».</p>' : ''}
+      ${isNew ? '<p class="note">Нет нужного руководителя - добавьте его в "Админка → Руководители".</p>' : ''}
       ${foot(isNew ? 'Добавить' : 'Сохранить')}
     </form>`);
 }
@@ -229,8 +229,8 @@ function mgrModal(m) {
 function mgrDeleteModal(m) {
   const list = ctx.state.employees.filter((e) => e.managerId === m.id);
   const others = ctx.state.managers.filter((x) => x.id !== m.id);
-  if (list.length && !others.length) { toast('Это единственный руководитель — сначала добавьте другого', 'warn'); return; }
-  openModal(`Удалить руководителя «${m.name}»?`, `
+  if (list.length && !others.length) { toast('Это единственный руководитель - сначала добавьте другого', 'warn'); return; }
+  openModal(`Удалить руководителя "${m.name}"?`, `
     <form data-form="mgr-del" data-id="${m.id}">
       ${list.length ? `<label>У него ${list.length} ${plural(list.length, 'сотрудник', 'сотрудника', 'сотрудников')}. Передать их:
         <select name="target">${others.map((o) => `<option value="${o.id}">${esc(o.name)} · ${esc(deptName(o.dept))}</option>`).join('')}</select></label>` : '<p>Сотрудников за ним не закреплено.</p>'}
@@ -259,7 +259,7 @@ function deptDeleteModal(id) {
   const count = ctx.state.employees.filter((e) => e.dept === id).length;
   const others = ctx.state.departments.filter((x) => x.id !== id);
   if (!others.length) { toast('Нельзя удалить последний отдел', 'warn'); return; }
-  openModal(`Удалить отдел «${d.name}»?`, `
+  openModal(`Удалить отдел "${d.name}"?`, `
     <form data-form="dept-del" data-id="${id}">
       ${count ? `<label>В отделе ${count} ${plural(count, 'сотрудник', 'сотрудника', 'сотрудников')}. Перевести их и руководителей в:
         <select name="target">${others.map((o) => `<option value="${o.id}">${esc(o.name)}</option>`).join('')}</select></label>` : '<p>В отделе нет сотрудников.</p>'}
@@ -272,7 +272,7 @@ function checklistModal(id) {
   openModal(`Чек-лист первых дней: ${d.name}`, `
     <form data-form="dept-checklist" data-id="${id}">
       <label>Пункты, по одному в строке<textarea name="items" rows="7" required>${esc((d.checklist || []).map((c) => c.text).join('\n'))}</textarea></label>
-      <p class="note">Что должно случиться с новичком в первые 3 рабочих дня. Отмечают новичок, руководитель или HR. Невыполненные пункты после 3-го рабочего дня — сигнал риска.</p>
+      <p class="note">Что должно случиться с новичком в первые 3 рабочих дня. Отмечают новичок, руководитель или HR. Невыполненные пункты после 3-го рабочего дня - сигнал риска.</p>
       ${foot('Сохранить')}
     </form>`, { wide: true });
 }
@@ -318,23 +318,23 @@ function actionDoneModal(x) {
 
 function rulesModal() {
   openModal('Как считается риск', `
-    <p>Каждый тревожный сигнал даёт баллы. Считаем только для тех, кто работает меньше 90 дней.<br><b>5 и больше</b> — высокий риск, <b>2–4</b> — требует внимания, <b>0–1</b> — всё в порядке. Стрелка рядом с баллом — изменение за неделю.</p>
+    <p>Каждый тревожный сигнал даёт баллы. Считаем только для тех, кто работает меньше 90 дней.<br><b>5 и больше</b> - высокий риск, <b>2-4</b> - требует внимания, <b>0-1</b> - всё в порядке. Стрелка рядом с баллом - изменение за неделю.</p>
     <table class="mini-table"><tbody>
       <tr><td>Нет ни одной задачи в Б24 за первые 3+ рабочих дня</td><td class="num">+3</td></tr>
-      <tr><td>5+ рабочих дней подряд без действий в задачах (3–4 дня)</td><td class="num">+3 (+1)</td></tr>
+      <tr><td>5+ рабочих дней подряд без действий в задачах (3-4 дня)</td><td class="num">+3 (+1)</td></tr>
       <tr><td>Не отмечался на работе 2+ рабочих дня подряд (1 день)</td><td class="num">+2 (+1)</td></tr>
       <tr><td>Не назначен наставник</td><td class="num">+2</td></tr>
       <tr><td>Не проведена встреча 7-го / 30-го дня (через 3 дня после срока)</td><td class="num">+2</td></tr>
       <tr><td>Не проведена встреча 60-го дня</td><td class="num">+1</td></tr>
-      <tr><td>Опрос новичка: оценка 1–2 по любому вопросу</td><td class="num">+2</td></tr>
+      <tr><td>Опрос новичка: оценка 1-2 по любому вопросу</td><td class="num">+2</td></tr>
       <tr><td>Чек-лист первых дней не выполнен к 3-му рабочему дню: половина и больше пунктов (меньше половины)</td><td class="num">+2 (+1)</td></tr>
-      <tr><td>Не взялся за 3+ задачи, срок которых прошёл (1–2 задачи)</td><td class="num">+2 (+1)</td></tr>
-      <tr><td>Начал, но не закончил 3+ задачи после срока — «застрял» (1–2 задачи)</td><td class="num">+2 (+1)</td></tr>
+      <tr><td>Не взялся за 3+ задачи, срок которых прошёл (1-2 задачи)</td><td class="num">+2 (+1)</td></tr>
+      <tr><td>Начал, но не закончил 3+ задачи после срока - "застрял" (1-2 задачи)</td><td class="num">+2 (+1)</td></tr>
       <tr><td>Больше половины из 5+ завершённых задач закрыто позже срока</td><td class="num">+1</td></tr>
       <tr><td>Завершено меньше 40% задач (если задач 5+)</td><td class="num">+2</td></tr>
       <tr><td>Первая задача появилась позже 3-го рабочего дня</td><td class="num">+1</td></tr>
     </tbody></table>
-    <p class="note">Срок «сегодня» ещё не просрочка. Задача, завершённая позже срока, перестаёт быть просроченной; опоздания учитываются, только когда это система. «Действие в задаче» — сотрудник сам начал или завершил задачу. Рабочие дни — Пн–Пт. Веса подобраны экспертно; проверить их можно на реальной истории увольнений.</p>`, { wide: true });
+    <p class="note">Срок "сегодня" ещё не просрочка. Задача, завершённая позже срока, перестаёт быть просроченной; опоздания учитываются, только когда это система. "Действие в задаче" - сотрудник сам начал или завершил задачу. Рабочие дни - Пн-Пт. Веса подобраны экспертно; проверить их можно на реальной истории увольнений.</p>`, { wide: true });
 }
 
 // ---------- события ----------
@@ -402,13 +402,13 @@ document.addEventListener('click', (ev) => {
     case 'task-rework': { const { e, t } = findTask(id); openModal(`На доработку: ${e.name}`, reworkForm(e, t), { wide: true }); break; }
     case 'leave': leaveModal(emp(id)); break;
     case 'unleave': { const e = emp(id); Object.assign(e, { status: 'active', leftDate: null, leftReason: null }); commit('Сотрудник снова в работающих'); break; }
-    case 'del-emp': confirmModal('Удалить сотрудника?', `«${esc(emp(id).name)}» будет удалён вместе с историей. Если человек уволился, лучше «Отметить увольнение» в карточке: тогда он останется в аналитике.`, 'del-emp-yes', id); break;
+    case 'del-emp': confirmModal('Удалить сотрудника?', `"${esc(emp(id).name)}" будет удалён вместе с историей. Если человек уволился, лучше "Отметить увольнение" в карточке: тогда он останется в аналитике.`, 'del-emp-yes', id); break;
     case 'del-emp-yes':
       S.employees = S.employees.filter((e) => e.id !== id);
       S.actions = S.actions.filter((x) => x.employeeId !== id);
       if (ui.openId === id) ui.openId = null;
       closeModal(); commit('Сотрудник удалён'); break;
-    case 'checkin': { const e = emp(id); e.checkins = { ...(e.checkins || {}), [el.dataset.k]: ctx.today }; commit('Встреча отмечена — риск пересчитан'); break; }
+    case 'checkin': { const e = emp(id); e.checkins = { ...(e.checkins || {}), [el.dataset.k]: ctx.today }; commit('Встреча отмечена - риск пересчитан'); break; }
     case 'checkin-undo': { const e = emp(id); delete e.checkins[el.dataset.k]; commit(); break; }
     case 'ob-toggle': {
       const e = emp(id);
@@ -423,8 +423,8 @@ document.addEventListener('click', (ev) => {
     case 'checkout-undo': { const e = emp(ui.asEmployee); delete e.attendance[ctx.today]; commit(); break; }
     case 't-start': { const t = myTask(id); t.started = ctx.today; markSeen(t); if (modalRoot.innerHTML) closeModal(); commit('Задача в работе'); break; }
     case 't-done': { const t = myTask(id); t.started = t.started || ctx.today; t.closed = ctx.today; markSeen(t); if (modalRoot.innerHTML) closeModal(); commit('Задача завершена'); break; }
-    case 't-undo': { const t = myTask(id); t.closed = null; t.started = t.started || ctx.today; if (modalRoot.innerHTML) closeModal(); commit(t.deadline < ctx.today ? 'Задача снова в работе. Срок уже прошёл — её видно как просроченную' : 'Задача снова в работе'); break; }
-    case 't-pause': { const t = myTask(id); t.started = null; if (modalRoot.innerHTML) closeModal(); commit('Задача приостановлена — снова в «Новых»'); break; }
+    case 't-undo': { const t = myTask(id); t.closed = null; t.started = t.started || ctx.today; if (modalRoot.innerHTML) closeModal(); commit(t.deadline < ctx.today ? 'Задача снова в работе. Срок уже прошёл - её видно как просроченную' : 'Задача снова в работе'); break; }
+    case 't-pause': { const t = myTask(id); t.started = null; if (modalRoot.innerHTML) closeModal(); commit('Задача приостановлена - снова в "Новых"'); break; }
     case 'add-mgr': mgrModal(null); break;
     case 'edit-mgr': mgrModal(manager(id)); break;
     case 'del-mgr': mgrDeleteModal(manager(id)); break;
@@ -507,7 +507,7 @@ document.addEventListener('submit', (ev) => {
     case 'emp': {
       const name = fd.name.trim().replace(/\s+/g, ' ');
       const dup = S.employees.find((e) => e.name.toLowerCase() === name.toLowerCase() && e.id !== id);
-      const problem = !name ? 'Укажите ФИО' : fd.hireDate > ctx.today ? 'Дата выхода не может быть в будущем' : !fd.managerId ? 'Выберите руководителя' : dup ? `«${dup.name}» уже есть (${deptName(dup.dept)})` : '';
+      const problem = !name ? 'Укажите ФИО' : fd.hireDate > ctx.today ? 'Дата выхода не может быть в будущем' : !fd.managerId ? 'Выберите руководителя' : dup ? `"${dup.name}" уже есть (${deptName(dup.dept)})` : '';
       if (problem) { formError(form, problem); return; }
       const fields = { name, dept: fd.dept, position: fd.position.trim(), managerId: fd.managerId, mentor: fd.mentor.trim(), hireDate: fd.hireDate };
       if (id) {
@@ -517,7 +517,7 @@ document.addEventListener('submit', (ev) => {
       } else {
         const e = { id: uid('e'), ...fields, status: 'active', leftDate: null, leftReason: null, checkins: {}, tasks: [], attendance: {}, pulse: {}, onboarding: {} };
         S.employees.push(e);
-        closeModal(); commit(`${name} — в «${deptName(e.dept)}»`);
+        closeModal(); commit(`${name} - в "${deptName(e.dept)}"`);
       }
       break;
     }
@@ -542,7 +542,7 @@ document.addEventListener('submit', (ev) => {
       const name = fd.name.trim();
       if (S.departments.some((d) => d.name.toLowerCase() === name.toLowerCase())) { toast('Такой отдел уже есть', 'warn'); return; }
       S.departments.push({ id: uid('d'), name, checklist: structuredClone(DEFAULT_CHECKLIST) });
-      commit(`Отдел «${name}» добавлен, чек-лист первых дней — стандартный`); break;
+      commit(`Отдел "${name}" добавлен, чек-лист первых дней - стандартный`); break;
     }
     case 'dept-del':
       for (const e of S.employees) if (e.dept === id) e.dept = fd.target;
@@ -564,7 +564,7 @@ document.addEventListener('submit', (ev) => {
       const e = emp(id || fd.emp);
       if (!fd.title.trim() || !fd.description.trim()) { formError(form, 'Нужны и название, и описание: что именно сделать'); return; }
       e.tasks.push({ id: uid('t'), title: fd.title.trim(), description: fd.description.trim(), created: ctx.today, deadline: fd.deadline, started: null, closed: null, by: ui.role === 'manager' ? ui.asManager : 'hr', version: 1, history: [], seenVersion: 0 });
-      closeModal(); commit(`Задача поставлена: ${e.name}. Он увидит её с отметкой «Новая»`); break;
+      closeModal(); commit(`Задача поставлена: ${e.name}. Он увидит её с отметкой "Новая"`); break;
     }
     case 'task-edit': {
       const { e, t } = findTask(id);
@@ -590,7 +590,7 @@ document.addEventListener('submit', (ev) => {
     case 'action-done': {
       const x = S.actions.find((a) => a.id === id);
       Object.assign(x, { status: 'done', doneAt: ctx.today, comment: fd.comment.trim(), hrSeen: false });
-      closeModal(); commit('Поручение закрыто — HR увидит результат'); break;
+      closeModal(); commit('Поручение закрыто - HR увидит результат'); break;
     }
   }
 });

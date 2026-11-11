@@ -1,5 +1,5 @@
 // Метрики новичка и объяснимый риск раннего ухода.
-// Никакого "ИИ-прогноза": только проверяемые правила, у каждого правила — текст и вес.
+// Никакого "ИИ-прогноза": только проверяемые правила, у каждого правила - текст и вес.
 import { addDays, diffDays, workdaysBetween } from './dates.js';
 
 export const ADAPTATION_DAYS = 90;
@@ -24,7 +24,7 @@ export function endDate(emp, today) {
   return emp.status === 'left' && emp.leftDate ? emp.leftDate : today;
 }
 
-// Короткий опрос новичка (1–5). Ответы видят HR и руководитель — это сказано на экране.
+// Короткий опрос новичка (1-5). Ответы видят HR и руководитель - это сказано на экране.
 export const PULSES = [{ key: 'd7', day: 7 }, { key: 'd30', day: 30 }];
 export const PULSE_QUESTIONS = [
   { key: 'clarity', label: 'Понятно, что от меня ждут' },
@@ -33,7 +33,7 @@ export const PULSE_QUESTIONS = [
 ];
 const PULSE_WINDOW = 14; // сколько дней после контрольной точки опрос доступен
 
-/** opts.checklist — чек-лист первых дней отдела [{id, text}]. */
+/** opts.checklist - чек-лист первых дней отдела [{id, text}]. */
 export function computeMetrics(emp, today, { checklist = [] } = {}) {
   const end = endDate(emp, today);
   const tenureDays = Math.max(1, diffDays(emp.hireDate, end) + 1);
@@ -45,8 +45,8 @@ export function computeMetrics(emp, today, { checklist = [] } = {}) {
   const received = tasks.length;
   const started = tasks.filter((t) => t.started && t.started <= end).length;
   const closed = tasks.filter((t) => t.closed && t.closed <= end).length;
-  // Просрочка: срок прошёл (срок «сегодня» ещё не просрочка), а задача не закрыта.
-  // Делим на «не взялся» и «взялся, но застрял» — руководителю нужно делать разное.
+  // Просрочка: срок прошёл (срок "сегодня" ещё не просрочка), а задача не закрыта.
+  // Делим на "не взялся" и "взялся, но застрял" - руководителю нужно делать разное.
   const isOpen = (t) => !(t.closed && t.closed <= end);
   const isStarted = (t) => !!(t.started && t.started <= end);
   const overdueList = tasks.filter((t) => isOpen(t) && t.deadline < end);
@@ -57,7 +57,7 @@ export function computeMetrics(emp, today, { checklist = [] } = {}) {
   const closedLate = tasks.filter((t) => !isOpen(t) && t.closed > t.deadline).length;
 
   // Активность сотрудника в Б24 = он сам начал или завершил задачу в этот день.
-  // Получение задачи — действие руководителя, активностью новичка не считается.
+  // Получение задачи - действие руководителя, активностью новичка не считается.
   const activeSet = new Set();
   for (const t of tasks) {
     if (t.started && t.started <= end) activeSet.add(t.started);
@@ -66,7 +66,7 @@ export function computeMetrics(emp, today, { checklist = [] } = {}) {
   const closedSet = new Set(closedWorkdays);
   const activity = workdays.map((d) => ({ date: d, active: activeSet.has(d), current: !closedSet.has(d) }));
 
-  // Серия «без действий» считается по завершённым дням, но действие сегодня её обнуляет.
+  // Серия "без действий" считается по завершённым дням, но действие сегодня её обнуляет.
   let idleStreak = 0;
   for (let i = closedWorkdays.length - 1; i >= 0 && !activeSet.has(end); i--) {
     if (activeSet.has(closedWorkdays[i])) break;
@@ -87,7 +87,7 @@ export function computeMetrics(emp, today, { checklist = [] } = {}) {
     return { ...c, done, due, overdue: !done && overdueBy > 0, overdueBy };
   });
 
-  // Отметки «я на работе». undefined = данных об отметках нет (правило не применяем).
+  // Отметки "я на работе". undefined = данных об отметках нет (правило не применяем).
   const att = emp.attendance;
   let absentStreak = 0;
   let presentDays = 0;
@@ -136,7 +136,7 @@ export function assessRisk(emp, today, opts = {}) {
 
   const reasons = [];
   const ok = [];
-  // hint — что посоветовать руководителю; попадает в текст поручения.
+  // hint - что посоветовать руководителю; попадает в текст поручения.
   const add = (points, text, hint) => reasons.push({ points, text, hint });
 
   if (m.hasAttendance && m.workdaysCount > 0) {
@@ -170,7 +170,7 @@ export function assessRisk(emp, today, opts = {}) {
       'Проверить, понимает ли новичок, что эти задачи его, и хватает ли ему времени.');
   }
   if (m.overdueStuck >= 1) {
-    add(m.overdueStuck >= 3 ? 2 : 1, `${m.overdueStuck} ${m.overdueStuck === 1 ? 'задача начата и застряла' : `${tasksWord(m.overdueStuck)} начаты и застряли`} после срока — нужна помощь`,
+    add(m.overdueStuck >= 3 ? 2 : 1, `${m.overdueStuck} ${m.overdueStuck === 1 ? 'задача начата и застряла' : `${tasksWord(m.overdueStuck)} начаты и застряли`} после срока - нужна помощь`,
       'Разобрать застрявшие задачи вместе: что непонятно, нужен ли наставник или обучение.');
   }
 
@@ -193,14 +193,14 @@ export function assessRisk(emp, today, opts = {}) {
     } else ok.push('Чек-лист первых дней выполнен');
   }
 
-  // Опрос: оценка 1–2 по любому вопросу — повод поговорить.
+  // Опрос: оценка 1-2 по любому вопросу - повод поговорить.
   if (m.lastPulse) {
     const a = m.lastPulse.answer;
     const low = PULSE_QUESTIONS.filter((q) => a[q.key] <= 2);
     if (low.length) {
       const q = low.sort((x, y) => a[x.key] - a[y.key])[0];
-      add(2, `Опрос ${m.lastPulse.day}-го дня: «${q.label}» — ${a[q.key]} из 5`,
-        `Обсудить ответ из опроса: «${q.label}» — ${a[q.key]} из 5${a.comment ? `, комментарий: «${a.comment}»` : ''}.`);
+      add(2, `Опрос ${m.lastPulse.day}-го дня: "${q.label}" - ${a[q.key]} из 5`,
+        `Обсудить ответ из опроса: "${q.label}" - ${a[q.key]} из 5${a.comment ? `, комментарий: "${a.comment}"` : ''}.`);
     } else {
       const avg = PULSE_QUESTIONS.reduce((s, q2) => s + a[q2.key], 0) / PULSE_QUESTIONS.length;
       ok.push(`Опрос ${m.lastPulse.day}-го дня: средняя оценка ${avg.toFixed(1)} из 5`);
@@ -215,7 +215,7 @@ export function assessRisk(emp, today, opts = {}) {
 
 /**
  * Динамика: как изменились баллы за неделю. Считаем те же правила на дату неделю назад.
- * null — если неделю назад человек ещё не работал или уже не в адаптации.
+ * null - если неделю назад человек ещё не работал или уже не в адаптации.
  */
 export function riskTrend(emp, today, opts = {}, now = assessRisk(emp, today, opts)) {
   if (!(now.level in { high: 1, medium: 1, low: 1 })) return null;

@@ -23,8 +23,8 @@ export function managerTeam() {
     <section class="kpis">
       <div class="kpi"><b>${team.length}</b><span>${plural(team.length, 'новичок', 'новичка', 'новичков')} в команде</span><small>работают меньше 90 дней</small></div>
       <div class="kpi red"><b>${team.filter((e) => assess(e).level === 'high').length}</b><span>с высоким риском</span><small>поговорите с ними на этой неделе</small></div>
-      <div class="kpi"><b>${notHere.length}</b><span>не отметились сегодня</span><small>${notHere.length ? esc(notHere.slice(0, 2).map((e) => e.name.split(' ')[0]).join(', ')) + (notHere.length > 2 ? '…' : '') : 'все на месте'}</small></div>
-      <div class="kpi amber click" data-act="page" data-p="mytasks" role="button" tabindex="0"><b>${fromHr.length}</b><span>поручений от HR</span><small>${fromHr.some((x) => isEscalated(x, ctx.today)) ? '<span class="red">есть просроченные - HR видит</span>' : 'открыть список →'}</small></div>
+      <div class="kpi"><b>${notHere.length}</b><span>${notHere.length === 1 ? 'не отметился' : 'не отметились'} сегодня</span><small>${notHere.length ? esc(notHere.slice(0, 2).map((e) => e.name.split(' ')[0]).join(', ')) + (notHere.length > 2 ? '…' : '') : 'все на месте'}</small></div>
+      <div class="kpi amber click" data-act="page" data-p="mytasks" role="button" tabindex="0"><b>${fromHr.length}</b><span>${plural(fromHr.length, 'поручение', 'поручения', 'поручений')} от HR</span><small>${fromHr.some((x) => isEscalated(x, ctx.today)) ? '<span class="red">есть просроченные - HR видит</span>' : 'открыть список →'}</small></div>
     </section>
     ${team.length ? `<div class="cards">${team.map(teamCard).join('')}</div>` : '<div class="empty">Сейчас в команде нет новичков.</div>'}`;
 }

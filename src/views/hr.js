@@ -32,9 +32,9 @@ export function overview() {
 
   return `
   <section class="kpis">
-    ${kpi(list.length, 'новичков сейчас', `работают меньше 90 дней${worse ? ` · у ${worse} риск вырос за неделю` : ''}`, '', 'data-act="goto-newbies" data-risk="all"')}
+    ${kpi(list.length, `${plural(list.length, 'новичок', 'новичка', 'новичков')} сейчас`, `работают меньше 90 дней${worse ? ` · у ${worse} риск вырос за неделю` : ''}`, '', 'data-act="goto-newbies" data-risk="all"')}
     ${kpi(by('high').length, 'с высоким риском', 'нужно действие сегодня', 'red', 'data-act="goto-newbies" data-risk="high"')}
-    ${kpi(by('medium').length, 'требуют внимания', '1-2 тревожных сигнала', 'amber', 'data-act="goto-newbies" data-risk="medium"')}
+    ${kpi(by('medium').length, by('medium').length === 1 ? 'требует внимания' : 'требуют внимания', '1-2 тревожных сигнала', 'amber', 'data-act="goto-newbies" data-risk="medium"')}
     ${kpi(pct(A.earlyShareOfLeavers), 'из уволившихся не доработали 90 дней', `${A.earlyLeavers} из ${A.leavers} за 12 мес.`, '', 'data-act="page" data-p="analytics"')}
   </section>
 
@@ -192,7 +192,7 @@ export function analytics() {
       ${ctx.state.departments.map((d) => `<button class="tab ${ui.anDept === d.id ? 'on' : ''}" data-act="an-dept" data-id="${d.id}">${esc(d.name)}</button>`).join('')}
     </div>
     <section class="kpis">
-      ${kpi(A.hires, 'вышли на работу', 'за последние 12 месяцев')}
+      ${kpi(A.hires, A.hires === 1 ? 'вышел на работу' : 'вышли на работу', 'за последние 12 месяцев')}
       ${kpi(pct(A.earlyShareOfLeavers), 'из уволившихся не доработали 90 дней', `${A.earlyLeavers} из ${A.leavers} уволившихся за 12 мес. (любой стаж)`, 'red')}
       ${kpi(pct(A.earlyRate), 'принятых ушли в первые 90 дней', `${A.early} из ${A.matured} - только те, у кого 90 дней уже прошли`, 'amber')}
       ${kpi(A.median == null ? '-' : `${A.median} дн.`, 'типичный срок до ухода', 'медиана среди ушедших в первые 90 дней')}
